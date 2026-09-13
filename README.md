@@ -26,11 +26,28 @@ okidači preko Open-Meteo, i izvoz u CSV i JSON.
 
 Model se **pravi u kodu**, ne učitava se ni jedan spoljni fajl — gotov ljudski
 model sa 36 imenovanih delova ne postoji besplatno i sa čistom licencom, a i
-najmanji bi bio megabajt naviše. Trup je rotaciono telo sa profilnom krivom,
-udovi su sužene kapsule, a zglobovi su ispupčene kugle — pa se meta za prst i
-anatomija poklapaju. Srazmere su postavljene po standardnim telesnim merama za
-visinu od 1,75 m i menjaju se na jednom mestu, u tabeli `T` u
-`js/telo/telo-model.js`.
+najmanji bi bio megabajt naviše.
+
+Udovi su **neprekidne cevi promenljive debljine** (`js/telo/cev.js`): kroz niz
+tačaka se provuče jedna površina koja se zadeblja na ramenu, bicepsu, kolenu i
+listu. Regioni su trake duž te iste površine, a normale se računaju pre
+deljenja — zato se na prelazu sa butine na koleno ne vidi nikakav šav. Trup i
+glava su rotaciona tela sa profilnom krivom, spljoštena po dubini jer je čovek
+širi nego deblji. Srazmere prate standardne telesne mere za visinu 1,75 m
+(rame na 0,818 visine, lakat 0,630, ručni zglob i prepone 0,485, koleno 0,285).
+Ukupno oko 9.500 trouglova, model se sklopi za četrdesetak milisekundi.
+
+### Tačke regiona
+
+Tačka koja se gađa prstom **ne izvodi se iz geometrije** — postavljena je
+namerno na površinu tela, uz normalu. Sredina geometrije bi kod vrata, ramena i
+kukova pala unutar tela, pa bi tačka uvek ispadala zaklonjena. Većina regiona
+ima tri tačke (napred-spolja, sa strane, pozadi-spolja), pa svaki region ima
+tačku okrenutu ka gledaocu iz sva četiri pogleda; prikazuje se ona najokrenutija
+koju ništa ne zaklanja. Kičma ima samo zadnju — spreda je trup stvarno zaklanja.
+
+Prst pogađa u tri koraka: tačka na 22 px, pa zrak kroz telo, pa najbliža tačka
+u krugu od 44 px. Promašaj za koji piksel tako ne prođe bez ičega.
 
 ## Pokretanje
 

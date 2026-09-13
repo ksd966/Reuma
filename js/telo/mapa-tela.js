@@ -1,13 +1,16 @@
 /**
  * Mapa tela — trodimenzionalni prikaz sa 36 regiona koji se biraju prstom.
  *
+ * Svaki region ima svoju vidljivu tačku na telu. Tačka je i meta za prst i
+ * mesto gde se, kad se bol unese, pojavi broj jačine.
+ *
  * Crta se samo kad ima šta da se promeni (okretanje, izmena unosa, promena
  * veličine ekrana). Dok se telo ne dira, petlja stoji i ne troši bateriju.
  */
 
 import * as THREE from '../vendor/three.js';
-import { napraviTelo } from './telo-model.js';
-import { REGIONI, PO_ID, stepenZa } from './regioni.js';
+import { napraviTelo, napraviTacke } from './telo-model.js';
+import { REGIONI, stepenZa } from './regioni.js';
 
 /** Četiri pogleda; između njih se ide dugmadima ili slobodno prstom. */
 export const POGLEDI = [
@@ -23,8 +26,11 @@ const BOJE = {
 };
 
 const PRAG_DODIRA = 10;     // px pomeraja preko kojih dodir postaje okretanje
-const PRAG_DUBINE = 0.08;   // m tolerancije pri proveri da li je region zaklonjen
-const RAZMAK_OZNAKA = 30;   // px najmanjeg razmaka između dva broja
+const PRAG_OKRENUTOSTI = 0.12;  // koliko tačka mora da gleda ka nama da bi se videla
+const ZAZOR = 0.02;             // m — da tačka ne zakloni samu sebe pri proveri
+const BLIZU_TACKE = 22;     // px — dodir ovoliko blizu tačke je pogodak u nju
+const DOMET_TACKE = 44;     // px — krajnji domet ako ni telo nije pogođeno
+const POLUPRECNIK = { tacka: 7, broj: 15 };   // px, za razmicanje oznaka
 const TAU = Math.PI * 2;
 
 /** Najkraći put do ciljnog ugla, da se telo ne vrti naokolo bez potrebe. */
@@ -45,8 +51,7 @@ export function napraviMapuTela({ platno, slojOznaka, naDodirRegiona, naPromenuP
   const scena = new THREE.Scene();
   const kamera = new THREE.PerspectiveCamera(30, 1, 0.1, 40);
 
-  const nebo = new THREE.HemisphereLight(0xffffff, 0x6a7078, 1.5);
-  scena.add(nebo);
+  scena.add(new THREE.HemisphereLight(0xffffff, 0x6a7078, 1.5));
   const glavno = new THREE.DirectionalLight(0xffffff, 2.0);
   glavno.position.set(0.55, 1.1, 1.25);
   scena.add(glavno);
@@ -59,30 +64,33 @@ export function napraviMapuTela({ platno, slojOznaka, naDodirRegiona, naPromenuP
   okret.add(telo.grupa);
   scena.add(okret);
 
-  /* Sidro oznake za svaki region, izračunato jednom u mirnom položaju; kasnije
-     se samo prebaci kroz matricu okreta, bez ponovnog računanja.
-     Uzima se središte NAJVEĆEG dela regiona, a ne središte svih delova zajedno:
-     kod prstiju bi zajedničko središte palo u vazduh između njih, pa bi zrak
-     za proveru zaklonjenosti promašio telo i broj se ne bi pojavio. */
-  const sidro = new Map();
-  telo.grupa.updateMatrixWorld(true);
-  for (const r of REGIONI) {
-    let najveci = null, najzapremina = -1;
-    for (const m of telo.meshoviPoRegionu.get(r.id)) {
-      const o = new THREE.Box3().expandByObject(m);
-      const d = o.getSize(new THREE.Vector3());
-      const v = d.x * d.y * d.z;
-      if (v > najzapremina) { najzapremina = v; najveci = o; }
-    }
-    sidro.set(r.id, najveci.getCenter(new THREE.Vector3()));
+  /* Tačke regiona u mirnom položaju; pri okretanju se samo zavrte oko uspravne
+     ose, bez ponovnog računanja. */
+  const tackeRegiona = napraviTacke();
+  const uModelu = new Map();
+  for (const [id, niz] of tackeRegiona) {
+    uModelu.set(id, niz.map(t => ({
+      p: new THREE.Vector3(...t.p),
+      n: new THREE.Vector3(...t.n)
+    })));
   }
 
   const stanje = new Map();                // id regiona -> { jacina, vrsta }
-  let izabran = null;                      // region trenutno otvoren u listu
+  const elementi = new Map();              // id regiona -> DOM element tačke
+  const naEkranu = new Map();              // id regiona -> { x, y, vidljiv }
+  let izabran = null;
   let trebaCrtati = true;
   let ugaoCilj = null;
   let brzina = 0;
-  const oznake = new Map();
+
+  for (const r of REGIONI) {
+    const el = document.createElement('span');
+    el.className = 'tacka-regiona';
+    el.dataset.region = r.id;
+    slojOznaka.appendChild(el);
+    elementi.set(r.id, el);
+    naEkranu.set(r.id, { x: 0, y: 0, vidljiv: false });
+  }
 
   /* ── veličina ─────────────────────────────────────────────────────── */
   function naVelicinu() {
@@ -102,88 +110,131 @@ export function napraviMapuTela({ platno, slojOznaka, naDodirRegiona, naPromenuP
   function obojiRegion(id) {
     const mat = telo.materijali.get(id);
     const unos = stanje.get(id);
-    const osnovna = unos ? stepenZa(unos.jacina).boja : boje().region;
-    mat.color.set(osnovna);
+    mat.color.set(unos ? stepenZa(unos.jacina).boja : boje().region);
     mat.emissive.set(id === izabran ? '#E0A64B' : '#000000');
     mat.emissiveIntensity = id === izabran ? 0.42 : 0;
   }
 
   function primeniBoje() {
-    telo.grupa.children.forEach(m => {
+    for (const m of telo.grupa.children) {
       if (m.userData.neutralno) m.material.color.set(boje().neutralno);
-    });
+    }
     for (const r of REGIONI) obojiRegion(r.id);
     trebaCrtati = true;
   }
 
-  /* ── oznake sa brojem ─────────────────────────────────────────────── */
+  /* ── tačke i brojevi ──────────────────────────────────────────────── */
   const zrak = new THREE.Raycaster();
   const tacka = new THREE.Vector3();
 
-  function oznakaZa(id) {
-    let el = oznake.get(id);
-    if (!el) {
-      el = document.createElement('span');
-      el.className = 'oznaka-regiona tabular';
-      slojOznaka.appendChild(el);
-      oznake.set(id, el);
+  function osveziTacke() {
+    const w = platno.clientWidth, h = platno.clientHeight;
+    const stavke = [];
+    const kosinus = Math.cos(okret.rotation.y), sinus = Math.sin(okret.rotation.y);
+    telo.grupa.updateMatrixWorld(true);
+
+    for (const r of REGIONI) {
+      const id = r.id;
+      const el = elementi.get(id);
+      const unos = stanje.get(id);
+
+      /* Izgled se postavlja pre provere vidljivosti: sakriven region kasnije
+         izranja pri okretanju i mora odmah da bude tačan. */
+      if (unos) {
+        el.textContent = String(unos.jacina);
+        el.dataset.stanje = 'uneto';
+        el.style.background = stepenZa(unos.jacina).boja;
+      } else {
+        el.textContent = '';
+        delete el.dataset.stanje;
+        el.style.background = '';
+      }
+
+      const izabrana = najboljaTacka(id, kosinus, sinus);
+      const zapis = naEkranu.get(id);
+      zapis.vidljiv = !!izabrana;
+      el.hidden = !izabrana;
+      if (!izabrana) continue;
+
+      tacka.copy(izabrana).project(kamera);
+      stavke.push({
+        el, zapis,
+        x: ((tacka.x + 1) / 2) * w,
+        y: ((1 - tacka.y) / 2) * h,
+        r: unos ? POLUPRECNIK.broj : POLUPRECNIK.tacka
+      });
     }
-    return el;
+
+    razmakni(stavke, w, h);
+    for (const s of stavke) {
+      s.el.style.left = `${s.x}px`;
+      s.el.style.top = `${s.y}px`;
+      s.zapis.x = s.x;
+      s.zapis.y = s.y;
+    }
   }
 
-  function osveziOznake() {
-    const w = platno.clientWidth, h = platno.clientHeight;
-    for (const [id, el] of oznake) {
-      if (!stanje.has(id)) { el.remove(); oznake.delete(id); }
-    }
+  const radnaP = new THREE.Vector3();
+  const radnaN = new THREE.Vector3();
+  const kaKameri = new THREE.Vector3();
 
-    const vidljive = [];
-    for (const [id, unos] of stanje) {
-      const el = oznakaZa(id);
-      el.textContent = String(unos.jacina);
-      el.style.background = stepenZa(unos.jacina).boja;
+  /**
+   * Bira tačku regiona koja se vidi: prvo onu najviše okrenutu ka gledaocu, pa
+   * proverava da li je neki drugi deo tela zaklanja (šaka ume da padne preko
+   * butine u pogledu sa boka). Ako nijedna ne prolazi, region nema tačku —
+   * i to je tačno: kičma se spreda i ne vidi.
+   */
+  function najboljaTacka(id, kosinus, sinus, dnevnik) {
+    const kandidati = uModelu.get(id);
+    const poredak = [];
 
-      tacka.copy(sidro.get(id)).applyMatrix4(okret.matrixWorld).project(kamera);
-      /* Zaklonjen region ne dobija oznaku — inače bi broj visio u vazduhu nad
-         delom tela okrenutim na drugu stranu. Ne traži se da region bude baš
-         prvi pogodak, jer se susedni delovi preklapaju (butina se završava
-         tačno na kolenu). Gleda se dubina: ako je površina regiona na istoj
-         udaljenosti kao i ono najbliže, region se vidi. */
-      zrak.setFromCamera({ x: tacka.x, y: tacka.y }, kamera);
-      const pogoci = zrak.intersectObjects(telo.grupa.children, false);
-      const nas = pogoci.find(g => g.object.userData.region === id);
-      const vidljiv = !!nas && nas.distance - pogoci[0].distance < PRAG_DUBINE;
-
-      el.hidden = !vidljiv;
-      if (vidljiv) {
-        vidljive.push({ el, x: ((tacka.x + 1) / 2) * w, y: ((1 - tacka.y) / 2) * h });
+    for (const k of kandidati) {
+      /* Okret je samo oko uspravne ose, pa je dovoljno zavrteti x i z. */
+      radnaN.set(k.n.x * kosinus + k.n.z * sinus, k.n.y, -k.n.x * sinus + k.n.z * kosinus);
+      radnaP.copy(k.p).applyMatrix4(telo.grupa.matrixWorld);
+      kaKameri.subVectors(kamera.position, radnaP);
+      const daljina = kaKameri.length();
+      kaKameri.divideScalar(daljina || 1);
+      const okrenutost = radnaN.dot(kaKameri);
+      if (okrenutost > PRAG_OKRENUTOSTI) {
+        poredak.push({ okrenutost, p: radnaP.clone(), daljina });
       }
     }
 
-    razmakni(vidljive, w, h);
-    for (const o of vidljive) {
-      o.el.style.left = `${o.x}px`;
-      o.el.style.top = `${o.y}px`;
+    poredak.sort((a, b) => b.okrenutost - a.okrenutost);
+    for (const k of poredak) {
+      zrak.set(kamera.position, kaKameri.subVectors(k.p, kamera.position).normalize());
+      zrak.far = k.daljina - ZAZOR;
+      const smetnja = zrak.intersectObjects(telo.grupa.children, false)[0];
+      zrak.far = Infinity;
+      if (dnevnik) dnevnik.push({
+        okrenutost: +k.okrenutost.toFixed(2),
+        zaklanja: smetnja ? (smetnja.object.userData.region || 'neutralno') : null,
+        koliko: smetnja ? +(k.daljina - smetnja.distance).toFixed(3) : 0
+      });
+      if (!smetnja) return k.p;
     }
+    return null;
   }
 
   /**
-   * Razmiče brojeve koji bi pali jedan preko drugog. Gusto zbijeni regioni
-   * (rame uz vrat, ručni zglob uz prste) inače daju gomilu u kojoj se ne vidi
-   * koji broj pripada čemu. Nekoliko prolaza je dovoljno da se razdvoje, a
-   * pomeraj ostaje mali pa se i dalje vidi na šta broj pokazuje.
+   * Razmiče tačke i brojeve koji bi pali jedan preko drugog. Gusto zbijeni
+   * regioni (ručni zglob uz prste, rame uz vrat) inače daju gomilu u kojoj se
+   * ne vidi šta je šta, a prst ne može da pogodi pravu tačku. Nekoliko prolaza
+   * je dovoljno, a pomeraj ostaje mali pa se i dalje vidi na šta tačka pokazuje.
    */
   function razmakni(stavke, w, h) {
-    for (let prolaz = 0; prolaz < 4; prolaz++) {
+    for (let prolaz = 0; prolaz < 6; prolaz++) {
       let mirno = true;
       for (let i = 0; i < stavke.length; i++) {
         for (let j = i + 1; j < stavke.length; j++) {
           const a = stavke[i], b = stavke[j];
+          const najmanje = a.r + b.r + 2;
           let dx = b.x - a.x, dy = b.y - a.y;
           let d = Math.hypot(dx, dy);
-          if (d >= RAZMAK_OZNAKA) continue;
+          if (d >= najmanje) continue;
           if (d < 0.001) { dx = 0; dy = 1; d = 1; }      // tačno jedan na drugom
-          const pomak = (RAZMAK_OZNAKA - d) / 2;
+          const pomak = (najmanje - d) / 2;
           const ux = (dx / d) * pomak, uy = (dy / d) * pomak;
           a.x -= ux; a.y -= uy; b.x += ux; b.y += uy;
           mirno = false;
@@ -191,10 +242,9 @@ export function napraviMapuTela({ platno, slojOznaka, naDodirRegiona, naPromenuP
       }
       if (mirno) break;
     }
-    const ivica = RAZMAK_OZNAKA / 2;
-    for (const o of stavke) {
-      o.x = Math.min(w - ivica, Math.max(ivica, o.x));
-      o.y = Math.min(h - ivica, Math.max(ivica, o.y));
+    for (const s of stavke) {
+      s.x = Math.min(w - s.r, Math.max(s.r, s.x));
+      s.y = Math.min(h - s.r, Math.max(s.r, s.y));
     }
   }
 
@@ -214,7 +264,7 @@ export function napraviMapuTela({ platno, slojOznaka, naDodirRegiona, naPromenuP
       trebaCrtati = false;
       okret.updateMatrixWorld(true);
       crtac.render(scena, kamera);
-      osveziOznake();
+      osveziTacke();
       javiPogled();
     }
     requestAnimationFrame(korak);
@@ -232,11 +282,39 @@ export function napraviMapuTela({ platno, slojOznaka, naDodirRegiona, naPromenuP
     if (id !== poslednjiPogled) { poslednjiPogled = id; naPromenuPogleda?.(id); }
   }
 
+  /* ── pogađanje regiona ────────────────────────────────────────────── */
+  /**
+   * Tri koraka, tim redom:
+   *  1. tačka pod prstom — ako je prst pao na 22 px od neke tačke, to je ona,
+   *     jer korisnik gađa tačku koju vidi, a ne površinu tela ispod nje;
+   *  2. zrak kroz telo — dodir bilo gde po udu bira taj region;
+   *  3. najbliža tačka u krugu od 44 px — da promašaj za koji piksel
+   *     ne prođe bez ičega.
+   */
+  function regionNaDodir(x, y) {
+    let najblizi = null, najbolje = Infinity;
+    for (const [id, t] of naEkranu) {
+      if (!t.vidljiv) continue;
+      const d = Math.hypot(t.x - x, t.y - y);
+      if (d < najbolje) { najbolje = d; najblizi = id; }
+    }
+    if (najblizi && najbolje <= BLIZU_TACKE) return najblizi;
+
+    const w = platno.clientWidth, h = platno.clientHeight;
+    zrak.setFromCamera({ x: (x / w) * 2 - 1, y: -(y / h) * 2 + 1 }, kamera);
+    const pogodak = zrak.intersectObjects(telo.zaPogadjanje, false)[0];
+    if (pogodak) return pogodak.object.userData.region;
+
+    return najblizi && najbolje <= DOMET_TACKE ? najblizi : null;
+  }
+
   /* ── prst ─────────────────────────────────────────────────────────── */
   let pocetak = null, prevuceno = false, prethodniX = 0, poslednjiPomak = 0;
 
   platno.addEventListener('pointerdown', (e) => {
-    platno.setPointerCapture(e.pointerId);
+    /* Hvatanje pokazivača ume da padne ako je prst već pušten — okretanje
+       radi i bez njega, pa greška ne sme da obori ostatak obrade dodira. */
+    try { platno.setPointerCapture(e.pointerId); } catch { /* nije presudno */ }
     pocetak = { x: e.clientX, y: e.clientY };
     prethodniX = e.clientX;
     prevuceno = false;
@@ -256,23 +334,18 @@ export function napraviMapuTela({ platno, slojOznaka, naDodirRegiona, naPromenuP
     }
   });
 
-  function zavrsi(e) {
+  platno.addEventListener('pointerup', (e) => {
     if (!pocetak) return;
     if (prevuceno) {
       brzina = Math.max(-0.09, Math.min(0.09, poslednjiPomak));
     } else {
-      const p = platno.getBoundingClientRect();
-      zrak.setFromCamera({
-        x: ((e.clientX - p.left) / p.width) * 2 - 1,
-        y: -((e.clientY - p.top) / p.height) * 2 + 1
-      }, kamera);
-      const pogodak = zrak.intersectObjects(telo.zaPogadjanje, false)[0];
-      if (pogodak) naDodirRegiona?.(pogodak.object.userData.region);
+      const o = platno.getBoundingClientRect();
+      const id = regionNaDodir(e.clientX - o.left, e.clientY - o.top);
+      if (id) naDodirRegiona?.(id);
     }
     pocetak = null;
     poslednjiPomak = 0;
-  }
-  platno.addEventListener('pointerup', zavrsi);
+  });
   platno.addEventListener('pointercancel', () => { pocetak = null; });
 
   /* ── spolja dostupno ──────────────────────────────────────────────── */
@@ -280,8 +353,7 @@ export function napraviMapuTela({ platno, slojOznaka, naDodirRegiona, naPromenuP
     naPogled(id) {
       const p = POGLEDI.find(x => x.id === id);
       if (!p) return;
-      const y = okret.rotation.y;
-      ugaoCilj = y + najkraciUgao(y, p.ugao);
+      ugaoCilj = okret.rotation.y + najkraciUgao(okret.rotation.y, p.ugao);
       brzina = 0;
     },
     postaviStanje(id, unos) {
@@ -299,6 +371,12 @@ export function napraviMapuTela({ platno, slojOznaka, naDodirRegiona, naPromenuP
       if (prethodni) obojiRegion(prethodni);
       if (id) obojiRegion(id);
       trebaCrtati = true;
+    },
+    /** Zašto se region ne vidi — za proveru pri radu na modelu. */
+    zastoSakriven(id) {
+      const dnevnik = [];
+      najboljaTacka(id, Math.cos(okret.rotation.y), Math.sin(okret.rotation.y), dnevnik);
+      return dnevnik;
     },
     stanjeRegiona: (id) => stanje.get(id),
     svaStanja: () => new Map(stanje),

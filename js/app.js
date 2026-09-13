@@ -115,6 +115,9 @@ function osveziBrojac() {
 
 osveziBrojac();
 
+/* Za proveru pri radu na modelu; ne koristi se u aplikaciji. */
+globalThis.artron = { mapa };
+
 /* ── rad bez mreže ────────────────────────────────────────────────────── */
 if ('serviceWorker' in navigator) {
   addEventListener('load', () => {

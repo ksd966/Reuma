@@ -30,13 +30,22 @@
 }
 .mapa__oznake{position:absolute;inset:0;pointer-events:none}
 
-/* Broj uz obojen region — boja nikad ne stoji sama. */
-.oznaka-regiona{
+/* Tačka regiona: mesto koje se gađa prstom. Dok bol nije unet stoji sitna
+   tačka; čim se unese, ista tačka postaje broj jačine — boja nikad ne stoji
+   sama. Sloj ne hvata dodire: prst ide na platno, koje bira najbližu tačku. */
+.tacka-regiona{
   position:absolute;transform:translate(-50%,-50%);
-  min-width:23px;height:23px;padding:0 6px;
   display:flex;align-items:center;justify-content:center;
-  border-radius:99px;
-  font-size:12.5px;font-weight:700;line-height:1;
+  width:9px;height:9px;border-radius:99px;
+  background:var(--text);opacity:.5;
+  box-shadow:0 0 0 1.5px var(--ground);
+  transition:width .14s ease,height .14s ease,opacity .14s ease;
+}
+.tacka-regiona[data-stanje="uneto"]{
+  min-width:26px;width:auto;height:26px;padding:0 7px;
+  opacity:1;
+  font-size:13px;font-weight:700;line-height:1;
+  font-variant-numeric:tabular-nums;
   color:#14171A;
   box-shadow:0 0 0 2px var(--ground);
 }
