@@ -2,7 +2,8 @@
 
 Lični dnevnik reumatskih bolova. Radi u pregledaču, instalira se na početni
 ekran telefona, i **svi podaci ostaju na telefonu** — nema servera i ništa ne
-napušta uređaj.
+napušta uređaj. Dan se beleži kroz tri odvojena unosa — jutro, podne i veče —
+jer se bol menja tokom dana, a to je ono što lekar pita.
 
 Artron beleži i prikazuje. Ne postavlja dijagnozu, ne savetuje terapiju i nije
 medicinski uređaj.
@@ -14,13 +15,19 @@ medicinski uređaj.
   imenovan; dodir otvara list odozdo sa jačinom 0–10 i vrstom bola.
 - **Spisak regiona** — isti unos bez okretanja modela; to je ujedno i put kojim
   čitač ekrana dolazi do svih regiona.
+- **Tri unosa dnevno** — jutro, podne i veče, svaki sa svojom ukupnom jačinom
+  bola i svojom mapom tela. Jutro nosi jutarnju ukočenost i san, podne
+  opterećenje i umor, veče umor i kakav je dan bio u celini. Unos može i
+  naknadno, za raniji deo dana ili za prethodne dane.
+- **Tok dana** — sva tri unosa jedan pored drugog i grafik koji pokazuje da li
+  je gore ujutru ili uveče.
 - Ljuska po dizajn-sistemu, manifest, ikonice, splash i service worker.
 
 ## Šta tek dolazi
 
-Tri dnevna unosa (jutro, podne, veče), režimi za upalni reumatizam i
-fibromijalgiju, lekovi i biološka terapija sa odbrojavanjem, dnevnik, vremenski
-okidači preko Open-Meteo, i izvoz u CSV i JSON.
+Režimi za upalni reumatizam i fibromijalgiju, lekovi i biološka terapija sa
+odbrojavanjem, dnevnik po danima, vremenski okidači preko Open-Meteo, i izvoz
+u CSV i JSON.
 
 ## Kako radi model tela
 
@@ -70,11 +77,17 @@ Screen*. Prvo otvaranje ostaviti desetak sekundi na mreži, da se keširaju fajl
 index.html              jedna strana, ekrani se smenjuju
 css/osnova.css          tokeni, ponašanje kao aplikacija, bezbedne zone
 css/komponente.css      kartica, list odozdo, klizač, spisak, legenda
-js/app.js               pokretanje i povezivanje delova
-js/unos.js              list odozdo za unos bola
+css/ekrani.css          pregled dana i unos
+js/app.js               pokretanje i prelaz između ekrana
+js/skladiste.js         localStorage, datumi, izvedene mere
+js/polja.js             šta se pita uz koji deo dana
+js/dan.js               tri polja za dan i tok dana
+js/unos-dana.js         unos za jedan deo dana
+js/unos.js              list odozdo za unos bola u jednom regionu
 js/telo/regioni.js      36 regiona sa imenima; boje jačine
-js/telo/telo-model.js   geometrija tela
-js/telo/mapa-tela.js    crtanje, okretanje, biranje prstom, oznake
+js/telo/cev.js          cev promenljive debljine, osnova za udove
+js/telo/telo-model.js   geometrija tela i tačke regiona
+js/telo/mapa-tela.js    crtanje, okretanje, biranje prstom, tačke
 js/vendor/three.js      three.js r186, MIT, svedeno na korišćene delove
 sw.js                   rad bez mreže
 ```

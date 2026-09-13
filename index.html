@@ -26,11 +26,18 @@
 
 <link rel="stylesheet" href="css/osnova.css">
 <link rel="stylesheet" href="css/komponente.css">
+<link rel="stylesheet" href="css/ekrani.css">
 </head>
 <body>
 
 <header class="topbar">
-  <svg class="topbar__znak" viewBox="0 0 512 512" aria-hidden="true">
+  <button class="topbar__nazad" id="nazad" type="button" hidden aria-label="Nazad na pregled dana">
+    <svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20">
+      <path d="M15 4 L7 12 L15 20" fill="none" stroke="currentColor" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+  <svg class="topbar__znak" id="znak" viewBox="0 0 512 512" aria-hidden="true">
     <rect width="512" height="512" fill="#14171A"/>
     <g fill="#F2F2F0">
       <circle cx="197" cy="150" r="57"/><circle cx="315" cy="150" r="57"/>
@@ -40,23 +47,70 @@
     </g>
     <rect x="188" y="238" width="136" height="36" rx="18" fill="#E0A64B"/>
   </svg>
-  <span class="topbar__ime">Artron</span>
-  <span class="topbar__desno" id="brojac">nijedan region</span>
+  <span class="topbar__ime" id="naslov">Artron</span>
+  <span class="topbar__desno" id="podnaslov"></span>
 </header>
 
-<main class="strana">
+<main>
 
-  <h1 class="samo-citac">Mapa tela — označavanje bolnih regiona</h1>
+<!-- ══ EKRAN: DAN ══════════════════════════════════════════════════════ -->
+<section class="ekran strana" id="ekran-dan" aria-labelledby="n-dan">
+  <h1 class="samo-citac" id="n-dan">Pregled dana</h1>
 
-  <section aria-labelledby="n-mapa">
-    <h2 class="naslov-odeljka" id="n-mapa">Mapa tela</h2>
+  <nav class="dan-traka" aria-label="Izbor dana">
+    <button class="dan-traka__strelica" id="dan-nazad" type="button" aria-label="Prethodni dan">
+      <svg viewBox="0 0 24 24" aria-hidden="true" width="19" height="19">
+        <path d="M15 4 L7 12 L15 20" fill="none" stroke="currentColor" stroke-width="2.2"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <div class="dan-traka__sredina">
+      <p class="dan-traka__ime" id="dan-ime">danas</p>
+      <p class="dan-traka__datum tabular" id="dan-datum"></p>
+    </div>
+    <button class="dan-traka__strelica" id="dan-napred" type="button" aria-label="Sledeći dan">
+      <svg viewBox="0 0 24 24" aria-hidden="true" width="19" height="19">
+        <path d="M9 4 L17 12 L9 20" fill="none" stroke="currentColor" stroke-width="2.2"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </nav>
+
+  <h2 class="naslov-odeljka">Tri unosa za ovaj dan</h2>
+  <div class="delovi" id="delovi"></div>
+  <div class="tok" id="tok" hidden></div>
+
+  <button class="dugme dugme--danas" id="na-danas" type="button" hidden>Nazad na danas</button>
+
+  <p class="podnozje">
+    Artron je lični dnevnik, nije medicinski uređaj. Beleži ono što unesete —
+    ne postavlja dijagnozu i ne savetuje terapiju. Svi podaci ostaju na ovom telefonu.
+  </p>
+</section>
+
+<!-- ══ EKRAN: UNOS ═════════════════════════════════════════════════════ -->
+<section class="ekran strana" id="ekran-unos" hidden aria-labelledby="n-unos">
+  <h1 class="samo-citac" id="n-unos">Unos bola</h1>
+
+  <section class="blok">
+    <h2 class="naslov-odeljka">Bol ukupno</h2>
+    <div class="jacina">
+      <span class="jacina__broj tabular" id="bol-broj">0</span>
+      <span class="jacina__rec" id="bol-rec">bez bola</span>
+    </div>
+    <input class="klizac" id="bol-klizac" type="range" min="0" max="10" step="1" value="0"
+           aria-label="Ukupna jačina bola od 0 do 10">
+    <div class="skala" aria-hidden="true"><span>0</span><span>5</span><span>10</span></div>
+  </section>
+
+  <section class="blok" aria-labelledby="n-mapa">
+    <h2 class="naslov-odeljka" id="n-mapa">Gde boli</h2>
 
     <div class="mapa">
-      <canvas class="mapa__platno" id="platno"
-              aria-hidden="true"></canvas>
+      <canvas class="mapa__platno" id="platno" aria-hidden="true"></canvas>
       <div class="mapa__oznake" id="oznake"></div>
     </div>
-    <p class="mapa__uputstvo">Prevuci prstom da okreneš telo. Dodirni region da uneseš bol.</p>
+    <p class="mapa__uputstvo">Prevuci prstom da okreneš telo. Dodirni tačku da uneseš bol.</p>
 
     <div class="pogledi" id="pogledi" role="group" aria-label="Pogled na telo"></div>
 
@@ -68,18 +122,22 @@
     </div>
   </section>
 
-  <section aria-labelledby="n-spisak">
+  <section class="blok" id="dodatna"></section>
+
+  <section class="blok" aria-labelledby="n-spisak">
     <h2 class="naslov-odeljka" id="n-spisak">Svi regioni — spisak</h2>
-    <p class="mapa__uputstvo" style="text-align:left;margin:0 0 10px">
+    <p class="uputstvo-levo">
       Isti unos bez okretanja modela. Ovaj spisak čita i čitač ekrana.
     </p>
     <div class="spisak" id="spisak"></div>
   </section>
 
-  <p class="podnozje">
-    Artron je lični dnevnik, nije medicinski uređaj. Beleži ono što unesete —
-    ne postavlja dijagnozu i ne savetuje terapiju. Svi podaci ostaju na ovom telefonu.
-  </p>
+  <div class="radnje radnje--kraj">
+    <button class="dugme dugme--tiho" id="obrisi-unos" type="button" hidden>Obriši unos</button>
+    <button class="dugme dugme--glavno" id="sacuvaj" type="button">Sačuvaj</button>
+  </div>
+</section>
+
 </main>
 
 <div class="zastor" id="zastor" hidden></div>
@@ -106,6 +164,8 @@
     <button class="dugme dugme--glavno" id="potvrdi" type="button">Potvrdi</button>
   </div>
 </div>
+
+<div class="javljanje" id="javljanje" role="status" aria-live="polite" hidden></div>
 
 <script type="module" src="js/app.js"></script>
 </body>
