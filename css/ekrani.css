@@ -271,3 +271,40 @@
   margin-left:14px;padding:4px 2px;
   color:var(--accent);font-size:14px;font-weight:600;
 }
+
+/* ── stanje čuvanja ─────────────────────────────────────────────────── */
+.cuvanje{
+  border:1px solid var(--line);border-radius:var(--radius);
+  background:var(--surface);padding:4px 15px;
+}
+.cuvanje__red{
+  display:flex;align-items:flex-start;gap:11px;
+  padding:12px 0;border-bottom:1px solid var(--line);
+}
+.cuvanje__red:last-child{border-bottom:none}
+.cuvanje__tacka{
+  width:8px;height:8px;border-radius:50%;flex:none;margin-top:6px;
+  background:var(--s-good);
+}
+.cuvanje__red[data-stanje="pazi"] .cuvanje__tacka{background:var(--s-warn)}
+.cuvanje__red[data-stanje="lose"] .cuvanje__tacka{background:var(--s-critical)}
+.cuvanje__tekst{display:flex;flex-direction:column;gap:3px;min-width:0}
+.cuvanje__ime{display:block;font-size:14px;line-height:1.35;font-weight:500}
+.cuvanje__pod{display:block;color:var(--dim);font-size:12.5px;line-height:1.45}
+
+/* ── podsetnik na kopiju ────────────────────────────────────────────── */
+.podsetnik{
+  margin-top:12px;padding:14px 15px;
+  border:1px solid var(--s-warn);border-radius:var(--radius);
+  background:var(--surface);
+}
+.podsetnik__tekst{font-size:13.5px;line-height:1.5}
+.podsetnik__radnje{display:flex;gap:8px;margin-top:11px}
+.podsetnik__radnje button{
+  min-height:var(--meta);padding:0 16px;
+  border:1px solid var(--line-strong);border-radius:var(--radius-sm);
+  background:var(--surface-2);color:var(--text);font-size:14px;font-weight:600;
+}
+.podsetnik__radnje .podsetnik__tiho{
+  background:none;border-color:transparent;color:var(--muted);font-weight:400;
+}

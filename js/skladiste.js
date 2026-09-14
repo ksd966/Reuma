@@ -1,13 +1,19 @@
 /**
- * Skladište — sve što aplikacija zna stoji ovde, u localStorage ovog telefona.
+ * Skladište — sve što aplikacija zna stoji ovde, na ovom telefonu.
  * Nema servera; nijedan podatak ne napušta uređaj.
  *
- * Ceo sadržaj je jedan zapis pod jednim ključem. Kad dnevnik preraste par
- * megabajta, prelazi se na IndexedDB — zato ostatak aplikacije nikad ne dira
- * localStorage direktno, nego samo funkcije odavde.
+ * Čitanje je trenutno, iz stanja u memoriji. Upis ide na dva mesta odjednom:
+ * u IndexedDB (glavno, trajnije) i u localStorage (ogledalo, da se pri
+ * pokretanju pročita odmah). Vidi `trajnost.js` za razlog.
+ *
+ * Ostatak aplikacije nikad ne dira skladište direktno, nego samo funkcije
+ * odavde — zato je ova izmena stala na jedno mesto.
  */
 
 import { poljaZa } from './polja.js';
+import {
+  pripremiBazu, bazaDostupna, citajIzBaze, pisiUBazu, zatraziTrajnost, stanjeSkladista
+} from './trajnost.js';
 
 const KLJUC = 'artron.v1';
 const VERZIJA = 1;
@@ -23,33 +29,89 @@ const PODRAZUMEVANI_REZIM = { upalni: false, fibro: false };
 const prazno = () => ({
   verzija: VERZIJA,
   podesavanja: { rezim: { ...PODRAZUMEVANI_REZIM } },
-  dani: {}
+  dani: {},
+  izmenjeno: 0,
+  poslednjaRezerva: null
 });
 
 let podaci = null;
+let zakazanUpis = null;
+let lokalnoRadi = true;
 
-function ucitaj() {
-  if (podaci) return podaci;
+function ispravi(x) {
+  if (!x || typeof x !== 'object' || x.verzija !== VERZIJA) return null;
+  x.dani ||= {};
+  x.podesavanja ||= {};
+  x.podesavanja.rezim = { ...PODRAZUMEVANI_REZIM, ...x.podesavanja.rezim };
+  x.izmenjeno ||= 0;
+  return x;
+}
+
+function izLokalnog() {
   try {
     const sirovo = localStorage.getItem(KLJUC);
-    podaci = sirovo ? JSON.parse(sirovo) : prazno();
+    return sirovo ? ispravi(JSON.parse(sirovo)) : null;
   } catch {
-    podaci = prazno();          // pokvaren zapis ne sme da obori aplikaciju
+    return null;                // pokvaren zapis ne sme da obori aplikaciju
   }
-  if (!podaci || podaci.verzija !== VERZIJA) podaci = prazno();
-  podaci.dani ||= {};
-  podaci.podesavanja ||= {};
-  podaci.podesavanja.rezim = { ...PODRAZUMEVANI_REZIM, ...podaci.podesavanja.rezim };
+}
+
+/**
+ * Pokretanje: otvori bazu, pročitaj oba mesta i uzmi novije. Ako je jedno
+ * prazno a drugo puno, to je prelazak sa starog načina čuvanja ili oporavak
+ * posle brisanja jednog od njih — u oba slučaja se puni ono prazno.
+ */
+export async function pripremi() {
+  await pripremiBazu();
+  const uBazi = ispravi(await citajIzBaze());
+  const uLokalnom = izLokalnog();
+
+  podaci = (!uBazi && !uLokalnom) ? prazno()
+    : !uBazi ? uLokalnom
+    : !uLokalnom ? uBazi
+    : (uBazi.izmenjeno >= uLokalnom.izmenjeno ? uBazi : uLokalnom);
+
+  /* Poravnaj oba mesta na isto stanje. */
+  upisiLokalno();
+  await pisiUBazu(podaci);
+  await zatraziTrajnost();
   return podaci;
 }
 
-function upisi() {
+function ucitaj() {
+  /* Ako se nešto pozove pre `pripremi`, radi se sa onim što je u localStorage —
+     aplikacija nikad ne sme da padne zato što skladište još nije spremno. */
+  podaci ??= izLokalnog() ?? prazno();
+  return podaci;
+}
+
+function upisiLokalno() {
   try {
-    localStorage.setItem(KLJUC, JSON.stringify(ucitaj()));
-    return true;
+    localStorage.setItem(KLJUC, JSON.stringify(podaci));
+    lokalnoRadi = true;
   } catch {
-    return false;               // pun disk ili privatni režim
+    lokalnoRadi = false;        // pun disk ili privatni režim
   }
+  return lokalnoRadi;
+}
+
+/**
+ * Upis ide u memoriju odmah, u localStorage odmah, a u bazu sa malim odlaganjem
+ * — pri brzom nizu izmena (klizač, više regiona) inače bi se pisalo na svaku.
+ */
+function upisi() {
+  ucitaj().izmenjeno = Date.now();
+  const lokalno = upisiLokalno();
+  clearTimeout(zakazanUpis);
+  zakazanUpis = setTimeout(() => { pisiUBazu(podaci); }, 400);
+  return lokalno || bazaDostupna();
+}
+
+/** Upiši odmah, bez odlaganja — pred zatvaranje aplikacije. */
+export function upisiSada() {
+  clearTimeout(zakazanUpis);
+  upisiLokalno();
+  return pisiUBazu(podaci);
 }
 
 /* ── datumi ───────────────────────────────────────────────────────────── */
@@ -235,6 +297,82 @@ export function zbirDana(kljuc, rezimSad = rezim()) {
 }
 
 /** Najjači zabeležen region — ono što se prvo pita kod lekara. */
+/* ── kopija podataka ──────────────────────────────────────────────────── */
+
+/**
+ * Ceo dnevnik kao tekst, za čuvanje u datoteku.
+ *
+ * Jedino ovo preživi i brisanje aplikacije i zamenu telefona — zato
+ * podešavanja na to i podsećaju kad kopije dugo nema.
+ */
+export function izvezi() {
+  const p = ucitaj();
+  return JSON.stringify({
+    aplikacija: 'Artron',
+    verzija: VERZIJA,
+    napravljeno: new Date().toISOString(),
+    podesavanja: p.podesavanja,
+    dani: p.dani
+  }, null, 1);
+}
+
+export function imeKopije() {
+  return `artron-kopija-${kljucDana()}.json`;
+}
+
+export function zabeleziRezervu() {
+  ucitaj().poslednjaRezerva = Date.now();
+  upisi();
+}
+
+export const poslednjaRezerva = () => ucitaj().poslednjaRezerva ?? null;
+
+/**
+ * Vrati podatke iz kopije.
+ *
+ * Dani se SPAJAJU, ne zamenjuju: vraćanje starije kopije ne sme da obriše ono
+ * što je u međuvremenu uneto. Kad se isti dan nađe na oba mesta, uzima se
+ * onaj iz kopije, jer je korisnik njega namerno vratio.
+ */
+export function uvezi(tekst) {
+  let k;
+  try { k = JSON.parse(tekst); }
+  catch { throw new Error('Datoteka nije ispravna — nije čitljiv zapis.'); }
+
+  if (!k || typeof k !== 'object' || !k.dani || typeof k.dani !== 'object') {
+    throw new Error('Datoteka ne sadrži dnevnik Artrona.');
+  }
+  if (k.verzija !== VERZIJA) {
+    throw new Error(`Kopija je iz verzije ${k.verzija ?? '?'}, a aplikacija radi sa ${VERZIJA}.`);
+  }
+
+  const p = ucitaj();
+  let novih = 0, izmenjenih = 0;
+  for (const [kljuc, dan] of Object.entries(k.dani)) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(kljuc) || !dan || typeof dan !== 'object') continue;
+    if (p.dani[kljuc]) izmenjenih++; else novih++;
+    p.dani[kljuc] = dan;
+  }
+  if (k.podesavanja?.rezim) {
+    p.podesavanja.rezim = { ...PODRAZUMEVANI_REZIM, ...k.podesavanja.rezim };
+  }
+  upisi();
+  return { novih, izmenjenih, ukupno: Object.keys(p.dani).length };
+}
+
+/** Stanje čuvanja za prikaz u podešavanjima. */
+export async function stanjeCuvanja() {
+  const s = await stanjeSkladista();
+  const p = ucitaj();
+  return {
+    ...s,
+    ogledalo: lokalnoRadi,
+    danaZabelezeno: Object.keys(p.dani).length,
+    velicinaZapisa: new Blob([JSON.stringify(p)]).size,
+    poslednjaRezerva: p.poslednjaRezerva ?? null
+  };
+}
+
 export function najjaciRegion(unos) {
   let najbolje = null;
   for (const [id, r] of Object.entries(unos?.regioni ?? {})) {

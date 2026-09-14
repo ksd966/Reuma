@@ -100,6 +100,14 @@
   <div class="tok" id="tok" hidden></div>
   <div class="zbir" id="zbir" hidden></div>
 
+  <div class="podsetnik" id="podsetnik-kopija" hidden role="status">
+    <p class="podsetnik__tekst" id="podsetnik-tekst"></p>
+    <div class="podsetnik__radnje">
+      <button type="button" id="podsetnik-sacuvaj">Sačuvaj kopiju</button>
+      <button type="button" id="podsetnik-kasnije" class="podsetnik__tiho">Kasnije</button>
+    </div>
+  </div>
+
   <button class="dugme dugme--bez-bola" id="bez-bolova" type="button">
     <span class="dugme__glavno-ime">Ništa me ne boli</span>
     <span class="dugme__pod" id="bez-bolova-pod"></span>
@@ -188,6 +196,16 @@
     Može i oba istovremeno, i može nijedan.
   </p>
   <div id="rezimi"></div>
+
+  <h2 class="naslov-odeljka">Čuvanje podataka</h2>
+  <div class="cuvanje" id="cuvanje"></div>
+
+  <div class="radnje radnje--kraj">
+    <button class="dugme dugme--tiho" id="vrati-kopiju" type="button">Vrati iz kopije</button>
+    <button class="dugme dugme--glavno" id="sacuvaj-kopiju" type="button">Sačuvaj kopiju</button>
+  </div>
+  <input type="file" id="izbor-kopije" accept="application/json,.json" hidden>
+  <p class="uputstvo-levo" id="ishod-kopije" style="margin-top:10px"></p>
 
   <p class="podnozje">
     Artron je lični dnevnik, nije medicinski uređaj. Beleži ono što unesete —

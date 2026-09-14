@@ -10,7 +10,14 @@ import { napraviEkranDana } from './dan.js';
 import { napraviEkranUnosa } from './unos-dana.js';
 import { napraviEkranPodesavanja } from './podesavanja.js';
 import { napraviEkranIzvestaja } from './izvestaj.js';
-import { kljucDana, pomeriDan, jeBuducnost, imeDana } from './skladiste.js';
+import {
+  kljucDana, pomeriDan, jeBuducnost, imeDana, pripremi, upisiSada, stanjeCuvanja
+} from './skladiste.js';
+import { sacuvajKopiju, trebaPodsetiti, odloziPodsetnik } from './kopija.js';
+
+/* Podaci se učitavaju pre prvog iscrtavanja: ekran dana bez njih ne bi imao
+   šta da pokaže, a IndexedDB se otvara asinhrono. */
+await pripremi();
 
 const ekrani = {
   dan: document.getElementById('ekran-dan'),
@@ -25,6 +32,8 @@ const elZnak = document.getElementById('znak');
 const elNaslov = document.getElementById('naslov');
 const elPodnaslov = document.getElementById('podnaslov');
 const elJavljanje = document.getElementById('javljanje');
+const elPodsetnik = document.getElementById('podsetnik-kopija');
+const elPodsetnikTekst = document.getElementById('podsetnik-tekst');
 
 let tekuciDan = kljucDana();
 
@@ -107,7 +116,31 @@ const ekranUnosa = napraviEkranUnosa({
 const ekranPodesavanja = napraviEkranPodesavanja({
   /* Promena režima menja šta se pita, pa se pregled dana mora ponovo iscrtati
      — lični zbir i mera popunjenosti zavise od izabranog režima. */
-  naPromenuRezima: () => ekranDana.iscrtaj(tekuciDan)
+  naPromenuRezima: () => ekranDana.iscrtaj(tekuciDan),
+  naVracanjePodataka: () => ekranDana.iscrtaj(tekuciDan)
+});
+
+/* ── podsetnik na kopiju ──────────────────────────────────────────────── */
+async function osveziPodsetnik() {
+  const s = await stanjeCuvanja();
+  const treba = trebaPodsetiti(s.danaZabelezeno);
+  elPodsetnik.hidden = !treba;
+  if (!treba) return;
+  elPodsetnikTekst.textContent = s.poslednjaRezerva
+    ? `Prošlo je više od mesec dana od poslednje kopije. Dnevnik ima ` +
+      `${s.danaZabelezeno} zabeleženih dana — sačuvajte kopiju da se ne izgube.`
+    : `Dnevnik ima ${s.danaZabelezeno} zabeleženih dana, a nijedna kopija još ` +
+      'nije sačuvana. Kopija je jedino što preživi brisanje aplikacije.';
+}
+
+document.getElementById('podsetnik-sacuvaj').addEventListener('click', () => {
+  sacuvajKopiju();
+  elPodsetnik.hidden = true;
+  javi('Kopija napravljena');
+});
+document.getElementById('podsetnik-kasnije').addEventListener('click', () => {
+  odloziPodsetnik();
+  elPodsetnik.hidden = true;
 });
 
 const ekranIzvestaja = napraviEkranIzvestaja();
@@ -129,7 +162,7 @@ elNazad.addEventListener('click', () => {
 
 /* Kad se aplikacija vrati u prvi plan posle ponoći, dan više nije isti. */
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState !== 'visible') return;
+  if (document.visibilityState !== 'visible') { upisiSada(); return; }
   if (!ekrani.dan.hidden && tekuciDan !== kljucDana()) {
     tekuciDan = kljucDana();
     ekranDana.iscrtaj(tekuciDan);
@@ -139,13 +172,24 @@ document.addEventListener('visibilitychange', () => {
 
 ekranDana.iscrtaj(tekuciDan);
 prikazi('dan');
+osveziPodsetnik();
+
+/* Pred zatvaranje ili prelazak u pozadinu upiši odmah, bez odlaganja —
+   na telefonu aplikacija ume da bude ugašena bez najave. */
+addEventListener('pagehide', () => { upisiSada(); });
+addEventListener('beforeunload', () => { upisiSada(); });
 
 /* Za proveru pri radu na modelu; aplikacija ovo ne koristi. */
 globalThis.artron = { ekranDana, ekranUnosa, ekranPodesavanja, ekranIzvestaja, prikazi };
 
 /* ── rad bez mreže ────────────────────────────────────────────────────── */
 if ('serviceWorker' in navigator) {
-  addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(() => { /* radi i bez toga */ });
-  });
+  const registruj = () => navigator.serviceWorker.register('sw.js')
+    .catch(() => { /* aplikacija radi i bez keša, samo ne i van mreže */ });
+
+  /* Ovaj modul čeka učitavanje podataka, pa se izvrši tek POSLE događaja
+     `load`. Kačenje na taj događaj tada više ništa ne bi pokrenulo — zato se
+     prvo proverava da li je učitavanje već završeno. */
+  if (document.readyState === 'complete') registruj();
+  else addEventListener('load', registruj, { once: true });
 }

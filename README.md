@@ -31,7 +31,33 @@ medicinski uređaj.
 - **Izveštaji** — nedelja, mesec, šest meseci i godina: prosečan bol uz
   poređenje sa prethodnim periodom, dana sa unosom, dana bez bolova, najjači
   dan, trend, tok dana u proseku i najčešće pogođeni regioni.
+- **Trajno čuvanje i kopija** — podaci idu u IndexedDB, sa `localStorage` kao
+  ogledalom, i mogu se sačuvati u datoteku i vratiti iz nje.
 - Ljuska po dizajn-sistemu, manifest, ikonice, splash i service worker.
+
+### Kako se podaci čuvaju
+
+`localStorage` na iPhone-u **nije trajan** — Safari briše podatke sajta posle
+sedam dana nekorišćenja. Za dnevnik koji se vodi godinama to je neprihvatljivo,
+pa podaci stoje na tri mesta:
+
+1. **IndexedDB** — glavno mesto; veći prostor i prvi na redu za zadržavanje kad
+   sistem čisti. Aplikacija instalirana na početni ekran je uz to izuzeta iz
+   sedmodnevnog brisanja.
+2. **`localStorage`** — ogledalo, da se stanje pročita odmah pri pokretanju i da
+   postoji rezerva ako IndexedDB zakaže. Pri pokretanju se čitaju oba mesta i
+   uzima novije, pa prelazak sa starog načina čuvanja i oporavak posle brisanja
+   jednog od njih rade sami od sebe.
+3. **Datoteka koju korisnik sam sačuva** — jedino što preživi brisanje
+   aplikacije i zamenu telefona. Podešavanja pokazuju kad je poslednja kopija
+   napravljena, a pregled dana podseća kad je prošlo više od mesec dana.
+
+Uz to se traži dozvola za trajno skladište (`navigator.storage.persist`), čime
+podaci prestaju da budu kandidat za automatsko brisanje kad ponestane prostora.
+Podešavanja pošteno prikazuju da li je dozvola data.
+
+Vraćanje iz kopije **spaja** dane umesto da ih zameni — vraćanje starije kopije
+ne sme da obriše ono što je u međuvremenu uneto.
 
 ### Izveštaji
 
@@ -121,7 +147,9 @@ css/osnova.css          tokeni, ponašanje kao aplikacija, bezbedne zone
 css/komponente.css      kartica, list odozdo, klizač, spisak, legenda
 css/ekrani.css          pregled dana i unos
 js/app.js               pokretanje i prelaz između ekrana
-js/skladiste.js         localStorage, datumi, izvedene mere
+js/skladiste.js         stanje, datumi, izvedene mere, izvoz i uvoz
+js/trajnost.js          IndexedDB, trajno skladište, stanje čuvanja
+js/kopija.js            čuvanje u datoteku i vraćanje iz nje
 js/polja.js             šta se pita uz koji deo dana, po režimu
 js/podesavanja.js       izbor režima praćenja
 js/dan.js               tri polja za dan, tok dana i lični zbir
