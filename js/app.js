@@ -12,6 +12,7 @@ import { napraviEkranPodesavanja } from './podesavanja.js';
 import { napraviEkranIzvestaja } from './izvestaj.js';
 import { napraviEkranLekova } from './ekran-lekovi.js';
 import { napraviEkranLeka } from './ekran-lek.js';
+import { napraviEkranDnevnika } from './dnevnik.js';
 import {
   kljucDana, pomeriDan, jeBuducnost, imeDana, pripremi, upisiSada, stanjeCuvanja
 } from './skladiste.js';
@@ -24,6 +25,7 @@ await pripremi();
 const ekrani = {
   dan: document.getElementById('ekran-dan'),
   unos: document.getElementById('ekran-unos'),
+  dnevnik: document.getElementById('ekran-dnevnik'),
   izvestaj: document.getElementById('ekran-izvestaj'),
   lekovi: document.getElementById('ekran-lekovi'),
   lek: document.getElementById('ekran-lek'),
@@ -72,7 +74,7 @@ function prikazi(ime) {
   for (const [id, el] of Object.entries(ekrani)) el.hidden = id !== ime;
   /* Traka pri dnu stoji na glavnim ekranima; na podekranima je zamenjuje
      strelica nazad i lepljivo dugme za čuvanje. */
-  const glavni = ['dan', 'lekovi', 'izvestaj', 'podesavanja'].includes(ime);
+  const glavni = ['dan', 'dnevnik', 'lekovi', 'izvestaj', 'podesavanja'].includes(ime);
   elNazad.hidden = glavni;
   elZnak.hidden = !glavni;
   elDno.hidden = !glavni;
@@ -91,6 +93,9 @@ function prikazi(ime) {
     elPodnaslov.textContent = '';
   } else if (ime === 'izvestaj') {
     elNaslov.textContent = 'Izveštaj';
+    elPodnaslov.textContent = '';
+  } else if (ime === 'dnevnik') {
+    elNaslov.textContent = 'Dnevnik';
     elPodnaslov.textContent = '';
   } else if (ime === 'lekovi') {
     elNaslov.textContent = 'Lekovi';
@@ -163,6 +168,15 @@ document.getElementById('podsetnik-kasnije').addEventListener('click', () => {
 
 const ekranIzvestaja = napraviEkranIzvestaja();
 
+/* Iz dnevnika se skače na izabrani dan, pa se on i prikaže na ekranu dana. */
+const ekranDnevnika = napraviEkranDnevnika({
+  naIzborDana: (kljuc) => {
+    tekuciDan = kljuc;
+    ekranDana.iscrtaj(tekuciDan);
+    prikazi('dan');
+  }
+});
+
 /* Lekovi se vraćaju na spisak, a spisak na pregled dana — zato ekran lekova
    pamti odakle se u njega ušlo. */
 let odakleULek = 'lekovi';
@@ -181,6 +195,7 @@ const ekranLeka = napraviEkranLeka({
 /* Traka pri dnu vodi na četiri glavna ekrana. */
 const naGlavni = {
   dan:         () => { ekranDana.iscrtaj(tekuciDan); prikazi('dan'); osveziPodsetnik(); },
+  dnevnik:     () => { ekranDnevnika.iscrtaj(); prikazi('dnevnik'); },
   lekovi:      () => { ekranLekova.iscrtaj(tekuciDan); prikazi('lekovi'); },
   izvestaj:    () => { ekranIzvestaja.iscrtaj(tekuciDan); prikazi('izvestaj'); },
   podesavanja: () => { ekranPodesavanja.iscrtaj(); prikazi('podesavanja'); }
@@ -221,7 +236,7 @@ addEventListener('beforeunload', () => { upisiSada(); });
 
 /* Za proveru pri radu na modelu; aplikacija ovo ne koristi. */
 globalThis.artron = { ekranDana, ekranUnosa, ekranPodesavanja, ekranIzvestaja,
-                      ekranLekova, ekranLeka, prikazi };
+                      ekranLekova, ekranLeka, ekranDnevnika, prikazi };
 
 /* ── rad bez mreže ────────────────────────────────────────────────────── */
 if ('serviceWorker' in navigator) {

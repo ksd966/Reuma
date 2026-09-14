@@ -11,6 +11,9 @@ import {
   sacuvajKopiju, vratiIzKopije, opisPoslednjeKopije, opisVelicine
 } from './kopija.js';
 import { naPocetnomEkranu } from './trajnost.js';
+import {
+  dnevnikUTabelu, lekoviUTabelu, sacuvajTabelu, imeDnevnika, imeLekova, brojRedova
+} from './izvoz.js';
 
 const REZIMI = [
   {
@@ -44,11 +47,33 @@ export function napraviEkranPodesavanja({ naPromenuRezima, naVracanjePodataka })
   const elVrati = document.getElementById('vrati-kopiju');
   const elIzbor = document.getElementById('izbor-kopije');
   const elIshod = document.getElementById('ishod-kopije');
+  const elIzvozDnevnik = document.getElementById('izvoz-dnevnik');
+  const elIzvozLekovi = document.getElementById('izvoz-lekovi');
+  const elIshodIzvoza = document.getElementById('ishod-izvoza');
+
+  /* ── izvoz u tabelu ─────────────────────────────────────────────────── */
+  function osveziIzvoz() {
+    const n = brojRedova();
+    elIzvozDnevnik.disabled = n.unosa === 0;
+    elIzvozLekovi.disabled = n.lekova === 0;
+    elIshodIzvoza.textContent = n.unosa === 0 && n.lekova === 0
+      ? 'Još nema šta da se izveze.'
+      : `Dnevnik: ${n.unosa} ${n.unosa === 1 ? 'unos' : 'unosa'} · ` +
+        `Lekovi: ${n.lekova} ${n.lekova === 1 ? 'zapis' : 'zapisa'}.`;
+  }
+
+  elIzvozDnevnik.addEventListener('click', () => {
+    elIshodIzvoza.textContent = `Napravljeno: ${sacuvajTabelu(dnevnikUTabelu(), imeDnevnika())}`;
+  });
+  elIzvozLekovi.addEventListener('click', () => {
+    elIshodIzvoza.textContent = `Napravljeno: ${sacuvajTabelu(lekoviUTabelu(), imeLekova())}`;
+  });
 
   function iscrtaj() {
     const sad = rezim();
     elRezimi.replaceChildren(...REZIMI.map(r => kartica(r, !!sad[r.id])));
     iscrtajCuvanje();
+    osveziIzvoz();
   }
 
   /* ── stanje čuvanja ─────────────────────────────────────────────────── */

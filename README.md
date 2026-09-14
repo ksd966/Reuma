@@ -34,6 +34,10 @@ medicinski uređaj.
 - **Lekovi** — tri vrste, jer se različito prate: stalni sa potvrdom da su
   uzeti, po potrebi sa brojačem dnevno i nedeljno, i biološka terapija sa
   odbrojavanjem, rotacijom mesta primene i grafikom bola po danu ciklusa.
+- **Dnevnik** — svi dani u jednom spisku, najnoviji gore, sa sva tri unosa u
+  jednom redu i sažetkom: gde je bolelo, šta je još zabeleženo, koji lekovi.
+  Dodir na dan otvara taj dan za izmenu.
+- **Izvoz za lekara** — dnevnik i lekovi u CSV, tabela koja se otvara u Excelu.
 - **Trajno čuvanje i kopija** — podaci idu u IndexedDB, sa `localStorage` kao
   ogledalom, i mogu se sačuvati u datoteku i vratiti iz nje.
 - Ljuska po dizajn-sistemu, manifest, ikonice, splash i service worker.
@@ -118,10 +122,17 @@ To su brojevi koje je korisnik sam uneo, sabrani da bi mogao da uporedi jedan
 dan sa drugim. Nije dijagnostički skor i ne primenjuje nikakve zvanične
 kriterijume — tumačenje je na lekaru.
 
+### Izvoz
+
+Dnevnik i lekovi izvoze se u CSV sa tačka-zarezom kao razdvojnikom i sa BOM-om
+na početku — tako Excel na našim podešavanjima otvara tabelu bez pitanja i ne
+prikazuje č, ć, š, ž i đ kao smeće. CSV je za čitanje i pokazivanje lekaru; za
+vraćanje podataka služi kopija u JSON-u.
+
 ## Šta tek dolazi
 
-Dnevnik po danima, vremenski okidači preko Open-Meteo i izvoz u CSV za lekara.
-Izvoz u JSON već postoji kroz kopiju podataka.
+Vremenski okidači preko Open-Meteo: uz svaki unos se pamti kakvo je vreme bilo,
+pa se prati promena pritiska, vlažnost i nagla promena temperature.
 
 ## Kako radi model tela
 
@@ -186,6 +197,8 @@ js/podesavanja.js       izbor režima praćenja
 js/dan.js               tri polja za dan, tok dana i lični zbir
 js/statistika.js        sažimanje dnevnika u izveštaj za period
 js/izvestaj.js          ekran izveštaja i grafici
+js/dnevnik.js           spisak svih dana
+js/izvoz.js             izvoz u CSV za lekara
 js/lekovi.js            lekovi, uzimanja, primene, odbrojavanje, rotacija
 js/ekran-lekovi.js      spisak, odbrojavanje i grafik ciklusa
 js/ekran-lek.js         unos i izmena jednog leka
