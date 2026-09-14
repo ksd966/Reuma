@@ -11,6 +11,8 @@ import {
   uzimanjaLeka, brojUzimanja, zabeleziUzimanje, ponistiUzimanje,
   poslednjaPrimena, zabeleziPrimenu, sledeceMesto, odbrojavanje
 } from './lekovi.js';
+import { napraviKalendar, imeKalendara, brojPodsetnika } from './kalendar.js';
+import { posaljiDatoteku } from './izvoz.js';
 import { bolPoDanuCiklusa } from './statistika.js';
 import { punDatum, imeDana, jeDanas, kljucDana } from './skladiste.js';
 import { stepenZa } from './telo/regioni.js';
@@ -34,7 +36,8 @@ export function napraviEkranLekova({ naOtvaranjeLeka, naJavljanje, naIzmenu }) {
       odeljakBioloska(),
       odeljakStalni(),
       odeljakPoPotrebi(),
-      odeljakSvi()
+      odeljakSvi(),
+      odeljakPodsetnika()
     ].filter(Boolean);
     el.append(...delovi);
   }
@@ -301,6 +304,55 @@ export function napraviEkranLekova({ naOtvaranjeLeka, naJavljanje, naIzmenu }) {
   }
 
   /* ── svi lekovi ───────────────────────────────────────────────────── */
+  /* ── podsetnici u kalendar ────────────────────────────────────────── */
+
+  /**
+   * Prave notifikacije na iPhone-u traže server koji ih šalje, a dogovor je da
+   * ništa ne napušta telefon. Kalendar radi isti posao bez servera: datoteka
+   * se napravi ovde, telefon je uveze i dalje podseća sam.
+   */
+  function odeljakPodsetnika() {
+    const koliko = brojPodsetnika();
+    const okvir = document.createElement('div');
+    okvir.className = 'podsetnici';
+
+    const opis = document.createElement('p');
+    opis.className = 'podsetnici__opis';
+    opis.textContent = koliko
+      ? 'Artron napravi datoteku sa rasporedom koji ste ovde uneli. Otvorite je ' +
+        'i telefon je doda u Kalendar, pa dalje podseća sam — i kad Artron nije ' +
+        'otvoren. Ništa ne ide na internet.'
+      : 'Podsetnici se prave od rasporeda koji unesete: stalnim lekovima zadajte ' +
+        'vreme uzimanja, a kod biološke zabeležite bar jednu primenu da bi se ' +
+        'znalo kad je sledeća.';
+    okvir.appendChild(opis);
+
+    const dugme = document.createElement('button');
+    dugme.type = 'button';
+    dugme.className = 'dugme';
+    dugme.textContent = 'Napravi podsetnike za Kalendar';
+    dugme.disabled = !koliko;
+    okvir.appendChild(dugme);
+
+    const ishod = document.createElement('p');
+    ishod.className = 'podsetnici__ishod';
+    ishod.setAttribute('role', 'status');
+    okvir.appendChild(ishod);
+
+    dugme.addEventListener('click', async () => {
+      const k = napraviKalendar(kljucDana());
+      const gotovo = await posaljiDatoteku(k.tekst, imeKalendara(), 'text/calendar;charset=utf-8');
+      if (!gotovo) return;                       // korisnik zatvorio list za deljenje
+      const preskoceno = k.preskoceno.length
+        ? ` Bez podsetnika: ${k.preskoceno.join('; ')}.` : '';
+      ishod.textContent =
+        `Napravljeno — ${k.dogadjaja} ${k.dogadjaja === 1 ? 'podsetnik' : 'podsetnika'}` +
+        ` u datoteci ${gotovo}.${preskoceno}`;
+    });
+
+    return odeljak('Podsetnici', [okvir]);
+  }
+
   function odeljakSvi() {
     const deca = lekovi().map(l => {
       const b = document.createElement('button');

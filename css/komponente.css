@@ -85,8 +85,8 @@
 }
 .pogledi button{
   min-height:var(--meta);
-  border:1px solid var(--line);border-radius:var(--radius-sm);
-  background:var(--surface);color:var(--muted);
+  border:1px solid var(--line-strong);border-radius:var(--radius-sm);
+  background:var(--kontrola);color:var(--muted);
   font-size:13.5px;
 }
 .pogledi button[aria-pressed="true"]{
@@ -100,7 +100,10 @@
 .legenda i{width:13px;height:13px;border-radius:4px;flex:none}
 
 /* ── kartica i spisak regiona ───────────────────────────────────────── */
-.card{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+.card{
+  border:1px solid var(--ivica-kartice);border-radius:var(--radius);
+  background:var(--surface);box-shadow:var(--dizanje);
+}
 
 .spisak{margin-top:8px}
 .spisak__grupa{margin-bottom:22px}
@@ -113,8 +116,8 @@
   min-height:var(--meta);
   display:flex;align-items:center;gap:9px;
   padding:10px 13px;text-align:left;
-  border:1px solid var(--line);border-radius:var(--radius-sm);
-  background:var(--surface);
+  border:1px solid var(--line-strong);border-radius:var(--radius-sm);
+  background:var(--kontrola);
   font-size:14.5px;line-height:1.3;
 }
 .spisak__dugme b{
@@ -168,8 +171,8 @@
 .vrste{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 .vrste button{
   min-height:var(--meta);padding:0 17px;
-  border:1px solid var(--line);border-radius:99px;
-  background:var(--surface);color:var(--muted);font-size:14px;
+  border:1px solid var(--line-strong);border-radius:99px;
+  background:var(--kontrola);color:var(--muted);font-size:14px;
 }
 .vrste button[aria-pressed="true"]{
   border-color:var(--accent);color:var(--text);font-weight:600;
@@ -209,8 +212,8 @@
 }
 .skala-tabla button{
   min-height:50px;
-  border:1.5px solid var(--line);border-radius:var(--radius-sm);
-  background:var(--surface);color:var(--muted);
+  border:1.5px solid var(--line-strong);border-radius:var(--radius-sm);
+  background:var(--kontrola);color:var(--muted);
   font-size:18px;font-weight:600;font-variant-numeric:tabular-nums;
   transition:background .12s ease,border-color .12s ease,color .12s ease;
 }

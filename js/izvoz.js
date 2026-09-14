@@ -109,9 +109,28 @@ export function lekoviUTabelu() {
 
 /* ── čuvanje u datoteku ──────────────────────────────────────────────── */
 
-export function sacuvajTabelu(sadrzaj, ime) {
-  const blob = new Blob([sadrzaj], { type: 'text/csv;charset=utf-8' });
-  const adresa = URL.createObjectURL(blob);
+/**
+ * Šalje datoteku korisniku.
+ *
+ * Prvo se pokušava deljenje: aplikacija dodata na početni ekran na iPhone-u
+ * nema prozor za preuzimanje, pa je list za deljenje jedini put kojim datoteka
+ * stigne u Kalendar, Fajlove ili poštu. Gde deljenja nema, ostaje preuzimanje.
+ *
+ * Vraća ime datoteke, ili `null` ako je korisnik odustao od deljenja — tada
+ * nije greška i ne treba ništa javljati.
+ */
+export async function posaljiDatoteku(sadrzaj, ime, tip) {
+  const dat = new File([sadrzaj], ime, { type: tip });
+  if (navigator.canShare?.({ files: [dat] })) {
+    try {
+      await navigator.share({ files: [dat], title: ime });
+      return ime;
+    } catch (e) {
+      if (e?.name === 'AbortError') return null;
+      /* Deljenje je odbijeno iz nekog drugog razloga — probaj preuzimanje. */
+    }
+  }
+  const adresa = URL.createObjectURL(dat);
   const veza = document.createElement('a');
   veza.href = adresa;
   veza.download = ime;
@@ -121,6 +140,9 @@ export function sacuvajTabelu(sadrzaj, ime) {
   setTimeout(() => URL.revokeObjectURL(adresa), 60_000);
   return ime;
 }
+
+export const sacuvajTabelu = (sadrzaj, ime) =>
+  posaljiDatoteku(sadrzaj, ime, 'text/csv;charset=utf-8');
 
 export const imeDnevnika = () => `artron-dnevnik-${kljucDana()}.csv`;
 export const imeLekova = () => `artron-lekovi-${kljucDana()}.csv`;

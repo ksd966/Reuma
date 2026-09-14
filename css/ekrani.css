@@ -1,7 +1,16 @@
 /* Artron — ekrani: pregled dana i unos. */
 
 .ekran{display:block}
-.blok{margin-bottom:4px}
+/* Blok je kartica, a ne samo razmak: bez podloge je sve stajalo jedno ispod
+   drugog na istoj ravni, pa se nije videlo gde jedno pitanje prestaje a drugo
+   počinje. Podloga → kartica → kontrola u kartici, tri tona iz dizajn-sistema. */
+.blok{
+  margin-bottom:12px;padding:16px 15px 17px;
+  border:1px solid var(--ivica-kartice);border-radius:var(--radius);
+  background:var(--surface);box-shadow:var(--dizanje);
+}
+.blok:empty{display:none}
+.blok > .naslov-odeljka:first-child{margin-top:0}
 
 .uputstvo-levo{color:var(--muted);font-size:13.5px;line-height:1.55;margin:0 0 12px}
 
@@ -13,8 +22,8 @@
 .dan-traka__strelica{
   width:var(--meta);height:var(--meta);
   display:flex;align-items:center;justify-content:center;
-  border:1px solid var(--line);border-radius:var(--radius-sm);
-  background:var(--surface);color:var(--muted);
+  border:1px solid var(--line-strong);border-radius:var(--radius-sm);
+  background:var(--kontrola);color:var(--muted);
 }
 .dan-traka__strelica:disabled{opacity:.32;cursor:default}
 .dan-traka__sredina{text-align:center;min-width:0}
@@ -32,8 +41,8 @@
 .deo{
   display:flex;flex-direction:column;align-items:stretch;gap:7px;
   min-height:164px;padding:14px 12px 15px;
-  border:1px solid var(--line);border-radius:var(--radius);
-  background:var(--surface);text-align:left;
+  border:1px solid var(--ivica-kartice);border-radius:var(--radius);
+  background:var(--surface);box-shadow:var(--dizanje);text-align:left;
 }
 /* Popunjen deo se jasno razlikuje od praznog: puna ivica i podignuta podloga. */
 .deo[data-stanje="uneto"]{border-color:var(--line-strong);background:var(--surface-2)}
@@ -67,7 +76,8 @@
 /* ── tok dana ───────────────────────────────────────────────────────── */
 .tok{
   margin-top:12px;padding:14px 14px 12px;
-  border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);
+  border:1px solid var(--ivica-kartice);border-radius:var(--radius);
+  background:var(--surface);box-shadow:var(--dizanje);
 }
 .tok__naslov{
   font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);
@@ -90,8 +100,8 @@
 .izbori{display:flex;flex-wrap:wrap;gap:8px;margin-top:11px}
 .izbori button{
   min-height:var(--meta);padding:0 16px;
-  border:1px solid var(--line);border-radius:99px;
-  background:var(--surface);color:var(--muted);font-size:14px;
+  border:1px solid var(--line-strong);border-radius:99px;
+  background:var(--kontrola);color:var(--muted);font-size:14px;
 }
 .izbori button[aria-pressed="true"]{
   border-color:var(--accent);color:var(--text);font-weight:600;background:var(--surface-2);
@@ -130,7 +140,8 @@
 /* ── lični zbir za praćenje ─────────────────────────────────────────── */
 .zbir{
   margin-top:12px;padding:14px 15px 13px;
-  border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);
+  border:1px solid var(--ivica-kartice);border-radius:var(--radius);
+  background:var(--surface);box-shadow:var(--dizanje);
 }
 .zbir__naslov{
   font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);
@@ -147,8 +158,8 @@
 
 /* ── izbor režima ───────────────────────────────────────────────────── */
 .rezim{
-  border:1px solid var(--line);border-radius:var(--radius);
-  background:var(--surface);margin-bottom:10px;overflow:hidden;
+  border:1px solid var(--ivica-kartice);border-radius:var(--radius);
+  background:var(--surface);box-shadow:var(--dizanje);margin-bottom:10px;overflow:hidden;
 }
 .rezim[data-ukljucen="da"]{border-color:var(--line-strong);background:var(--surface-2)}
 
@@ -190,7 +201,7 @@
   width:100%;margin-top:12px;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
   min-height:56px;padding:9px 16px;
-  background:var(--surface);border:1px solid var(--line-strong);color:var(--text);
+  background:var(--kontrola);border:1px solid var(--line-strong);color:var(--text);
 }
 .dugme--bez-bola:disabled{opacity:.4}
 .dugme__glavno-ime{font-size:15px;font-weight:600}
@@ -202,8 +213,8 @@
 .periodi button{
   min-height:var(--meta);padding:0 4px;
   font-weight:500;
-  border:1px solid var(--line);border-radius:var(--radius-sm);
-  background:var(--surface);color:var(--muted);font-size:13px;
+  border:1px solid var(--line-strong);border-radius:var(--radius-sm);
+  background:var(--kontrola);color:var(--muted);font-size:13px;
 }
 .periodi button[aria-pressed="true"]{
   border-color:var(--line-strong);background:var(--surface-2);
@@ -212,7 +223,8 @@
 
 .izv-blok{
   margin-top:12px;padding:17px;
-  border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);
+  border:1px solid var(--ivica-kartice);border-radius:var(--radius);
+  background:var(--surface);box-shadow:var(--dizanje);
 }
 .izv-naslov{
   font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);
@@ -233,7 +245,8 @@
 .plocica{
   padding:15px 16px;min-height:92px;
   display:flex;flex-direction:column;justify-content:center;gap:3px;
-  border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);
+  border:1px solid var(--ivica-kartice);border-radius:var(--radius);
+  background:var(--surface);box-shadow:var(--dizanje);
 }
 .plocica__ime{
   color:var(--dim);font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;
@@ -276,8 +289,8 @@
 
 /* ── stanje čuvanja ─────────────────────────────────────────────────── */
 .cuvanje{
-  border:1px solid var(--line);border-radius:var(--radius);
-  background:var(--surface);padding:4px 15px;
+  border:1px solid var(--ivica-kartice);border-radius:var(--radius);
+  background:var(--surface);box-shadow:var(--dizanje);padding:4px 15px;
 }
 .cuvanje__red{
   display:flex;align-items:flex-start;gap:11px;
@@ -298,7 +311,7 @@
 .podsetnik{
   margin-top:12px;padding:14px 15px;
   border:1px solid var(--s-warn);border-radius:var(--radius);
-  background:var(--surface);
+  background:var(--surface);box-shadow:var(--dizanje);
 }
 .podsetnik__tekst{font-size:13.5px;line-height:1.5}
 .podsetnik__radnje{display:flex;gap:8px;margin-top:11px}
@@ -315,8 +328,8 @@
 .unos{
   width:100%;min-height:var(--meta);margin-top:9px;
   padding:11px 13px;
-  border:1px solid var(--line);border-radius:var(--radius-sm);
-  background:var(--surface);color:var(--text);
+  border:1px solid var(--line-strong);border-radius:var(--radius-sm);
+  background:var(--kontrola);color:var(--text);
   font:inherit;font-size:16px;          /* 16px: ispod toga iOS zumira pri fokusu */
 }
 .unos::placeholder{color:var(--dim)}
@@ -333,8 +346,8 @@ input[type="time"].unos,input[type="date"].unos{
   display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:center;
   min-height:var(--meta);width:100%;
   padding:15px 16px;text-align:left;
-  border:1px solid var(--line);border-radius:var(--radius);
-  background:var(--surface);margin-bottom:8px;
+  border:1px solid var(--ivica-kartice);border-radius:var(--radius);
+  background:var(--surface);box-shadow:var(--dizanje);margin-bottom:8px;
 }
 .lek-red__ime{
   grid-column:1;grid-row:1;
@@ -351,8 +364,8 @@ input[type="time"].unos,input[type="date"].unos{
 .doza{
   display:flex;align-items:center;gap:14px;width:100%;
   min-height:62px;padding:13px 16px;text-align:left;
-  border:1px solid var(--line);border-radius:var(--radius);
-  background:var(--surface);margin-bottom:8px;
+  border:1px solid var(--ivica-kartice);border-radius:var(--radius);
+  background:var(--surface);box-shadow:var(--dizanje);margin-bottom:8px;
 }
 .doza[data-uzeto="da"]{border-color:var(--s-good);background:var(--surface-2)}
 .doza__kvadrat{
@@ -371,8 +384,8 @@ input[type="time"].unos,input[type="date"].unos{
 .po-potrebi{
   display:grid;grid-template-columns:1fr auto auto;gap:4px 10px;align-items:center;
   padding:14px 13px 14px 16px;
-  border:1px solid var(--line);border-radius:var(--radius);
-  background:var(--surface);margin-bottom:8px;
+  border:1px solid var(--ivica-kartice);border-radius:var(--radius);
+  background:var(--surface);box-shadow:var(--dizanje);margin-bottom:8px;
 }
 .po-potrebi__ime{grid-column:1;grid-row:1;font-size:15px;font-weight:600;letter-spacing:-.01em}
 .po-potrebi__pod{grid-column:1;grid-row:2;color:var(--dim);font-size:12.5px}
@@ -394,7 +407,8 @@ input[type="time"].unos,input[type="date"].unos{
 /* Biološka: odbrojavanje. */
 .bioloska{
   padding:17px;margin-bottom:12px;
-  border:1px solid var(--line-strong);border-radius:var(--radius);background:var(--surface);
+  border:1px solid var(--line-strong);border-radius:var(--radius);
+  background:var(--surface);box-shadow:var(--dizanje);
 }
 .bioloska__ime{font-size:18px;font-weight:600;letter-spacing:-.01em}
 .bioloska__pod{color:var(--dim);font-size:12.5px;margin-top:2px}
@@ -471,8 +485,8 @@ body[data-dno="da"] .strana{padding-bottom:calc(78px + var(--safe-bottom))}
 .uvod{
   color:var(--muted);font-size:14px;line-height:1.6;
   margin:0 0 14px;padding:14px 16px;
-  border:1px solid var(--line);border-left:3px solid var(--accent);
-  border-radius:var(--radius-sm);background:var(--surface);
+  border:1px solid var(--ivica-kartice);border-left:3px solid var(--accent);
+  border-radius:var(--radius-sm);background:var(--surface);box-shadow:var(--dizanje);
 }
 .uvod b{color:var(--text);font-weight:600}
 
@@ -484,11 +498,24 @@ body[data-dno="da"] .strana{padding-bottom:calc(78px + var(--safe-bottom))}
   font-size:12.5px;font-weight:600;
 }
 
+/* ── podsetnici u kalendar ──────────────────────────────────────────── */
+.podsetnici{
+  padding:16px;
+  border:1px solid var(--ivica-kartice);border-radius:var(--radius);
+  background:var(--surface);box-shadow:var(--dizanje);
+}
+.podsetnici__opis{color:var(--muted);font-size:13.5px;line-height:1.55;margin-bottom:13px}
+.podsetnici .dugme{width:100%;background:var(--kontrola);border:1px solid var(--line-strong)}
+.podsetnici .dugme:disabled{opacity:.4}
+.podsetnici__ishod{color:var(--dim);font-size:12.5px;line-height:1.5;margin-top:10px}
+.podsetnici__ishod:empty{display:none}
+
 /* ── dnevnik ────────────────────────────────────────────────────────── */
 .dnevnik-red{
   width:100%;display:block;text-align:left;
   padding:15px 16px;margin-bottom:10px;
-  border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);
+  border:1px solid var(--ivica-kartice);border-radius:var(--radius);
+  background:var(--surface);box-shadow:var(--dizanje);
 }
 .dnevnik-red__dan{font-size:15.5px;font-weight:600;letter-spacing:-.01em;line-height:1.3}
 .dnevnik-red__tri{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:9px}
@@ -516,7 +543,7 @@ body[data-dno="da"] .strana{padding-bottom:calc(78px + var(--safe-bottom))}
 .dugme--brza{
   min-height:52px;padding:8px 12px;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
-  background:var(--surface);border:1px solid var(--line-strong);color:var(--text);
+  background:var(--kontrola);border:1px solid var(--line-strong);color:var(--text);
   font-size:14px;font-weight:600;line-height:1.3;
 }
 .dugme--brza__pod{color:var(--muted);font-size:12px;font-weight:500}
@@ -527,7 +554,7 @@ body[data-dno="da"] .strana{padding-bottom:calc(78px + var(--safe-bottom))}
   width:100%;min-height:var(--meta);
   display:grid;grid-template-columns:1fr auto;align-items:center;gap:2px 12px;
   padding:14px 16px;text-align:left;
-  border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);
+  border:1px solid var(--line-strong);border-radius:var(--radius);background:var(--kontrola);
 }
 .sklopivo__ime{grid-column:1;font-size:15px;font-weight:600;letter-spacing:-.01em}
 .sklopivo__pod{grid-column:1;color:var(--muted);font-size:12.5px;line-height:1.45}

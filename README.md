@@ -44,6 +44,9 @@ medicinski uređaj.
 - **Dnevnik** — svi dani u jednom spisku, najnoviji gore, sa sva tri unosa u
   jednom redu i sažetkom: gde je bolelo, šta je još zabeleženo, koji lekovi.
   Dodir na dan otvara taj dan za izmenu.
+- **Podsetnici u Kalendar** — Artron napravi `.ics` datoteku od rasporeda koji
+  je već unet u Lekove; telefon je uveze i dalje podseća sam, i kad Artron nije
+  otvoren.
 - **Izvoz za lekara** — dnevnik i lekovi u CSV, tabela koja se otvara u Excelu.
 - **Trajno čuvanje i kopija** — podaci idu u IndexedDB, sa `localStorage` kao
   ogledalom, i mogu se sačuvati u datoteku i vratiti iz nje.
@@ -103,6 +106,54 @@ nedelji, godina po mesecu. Dani bez unosa se **ne popunjavaju nulom** — na
 grafiku ostaju kao tanka crtica na osnovi i ne ulaze u prosek, jer bi prosek od
 nepostojećih dana bio izmišljen podatak. Visina stubića nosi jačinu, a boja je
 samo pojačava.
+
+### Zašto podsetnici idu kroz Kalendar
+
+Prave notifikacije — one koje zazvone i kad aplikacija nije otvorena — na
+iPhone-u traže server koji ih šalje. To bi značilo da podaci napuštaju telefon
+i da neko taj server plaća, pa je otpalo.
+
+Kalendar radi isti posao bez ijednog servera. Artron od unetog rasporeda
+napravi `.ics` datoteku (`js/kalendar.js`), telefon je uveze, i dalje podseća
+sam. Stalni lekovi dobijaju dnevno ponavljanje u zadato vreme, biološka
+ponavljanje na dužinu ciklusa računato od poslednje zabeležene primene.
+Godinu dana unapred — dovoljno da se ne misli na to, dovoljno kratko da se
+zastarela terapija sama ugasi u kalendaru.
+
+Zapis prati RFC 5545: redovi se prelamaju na 75 **okteta** (ne znakova — „č",
+„ć", „š" i „ž" zauzimaju po dva, a prelom ne sme da padne usred znaka), a
+tačka-zarez, zarez i obrnuta kosa crta se štite. Vreme se piše bez oznake
+vremenske zone — lek se uzima u osam ujutru tamo gde je korisnik. Oznaka
+(`UID`) je stabilna, pa ponovni uvoz osvežava postojeće podsetnike umesto da
+ih udvostruči.
+
+Lekovima bez rasporeda se ne izmišlja termin: stalni bez zadatog vremena i
+biološka bez ijedne zabeležene primene se preskaču, a koji su preskočeni i
+zašto piše ispod dugmeta.
+
+U podsetnik ulazi samo ono što je korisnik sam uneo. Aplikacija ne predlaže
+doze i ne savetuje terapiju — to piše i u opisu svakog događaja.
+
+Datoteka se prvo nudi kroz list za deljenje (`navigator.share`): aplikacija
+dodata na početni ekran nema prozor za preuzimanje, pa je deljenje jedini put
+do Kalendara. Gde deljenja nema, ostaje obično preuzimanje. Isti put koriste i
+CSV izvoz i kopija podataka.
+
+### Razdvajanje površina
+
+Tri tona iz dizajn-sistema, redom: `--ground` za stranu, `--surface` za
+karticu, `--surface-2` za kontrolu unutar kartice. Ranije je sve bilo na
+`--surface`, pa se dugme nije razlikovalo od podloge ispod sebe, a na ekranu
+unosa kartice uopšte nije ni bilo — sve je stajalo na istoj ravni.
+
+Dva tokena nose razliku:
+
+- `--ivica-kartice` — u tamnom režimu `--line-strong`, jer na skoro crnoj
+  podlozi razdvaja ivica; u svetlom `--line`, jer bi jača bila gruba.
+- `--dizanje` — senka koja u svetlom režimu nosi glavni posao razdvajanja, a u
+  tamnom je jedva prisutna, jer senka na crnom ne radi ništa.
+
+Bez stakla, blura i sjaja — kako dizajn-sistem traži.
 
 ### Boje jačine bola
 
@@ -206,7 +257,8 @@ js/dan.js               tri polja za dan, tok dana i lični zbir
 js/statistika.js        sažimanje dnevnika u izveštaj za period
 js/izvestaj.js          ekran izveštaja i grafici
 js/dnevnik.js           spisak svih dana
-js/izvoz.js             izvoz u CSV za lekara
+js/izvoz.js             izvoz u CSV za lekara i slanje datoteke
+js/kalendar.js          podsetnici za lekove kao .ics za Kalendar
 js/lekovi.js            lekovi, uzimanja, primene, odbrojavanje, rotacija
 js/ekran-lekovi.js      spisak, odbrojavanje i grafik ciklusa
 js/ekran-lek.js         unos i izmena jednog leka

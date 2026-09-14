@@ -62,12 +62,14 @@ export function napraviEkranPodesavanja({ naPromenuRezima, naVracanjePodataka })
         `Lekovi: ${n.lekova} ${n.lekova === 1 ? 'zapis' : 'zapisa'}.`;
   }
 
-  elIzvozDnevnik.addEventListener('click', () => {
-    elIshodIzvoza.textContent = `Napravljeno: ${sacuvajTabelu(dnevnikUTabelu(), imeDnevnika())}`;
-  });
-  elIzvozLekovi.addEventListener('click', () => {
-    elIshodIzvoza.textContent = `Napravljeno: ${sacuvajTabelu(lekoviUTabelu(), imeLekova())}`;
-  });
+  /* `null` znači da je korisnik zatvorio list za deljenje — ne javljaj ništa. */
+  async function izvezi(napravi, ime) {
+    const gotovo = await sacuvajTabelu(napravi(), ime());
+    if (gotovo) elIshodIzvoza.textContent = `Napravljeno: ${gotovo}`;
+  }
+
+  elIzvozDnevnik.addEventListener('click', () => izvezi(dnevnikUTabelu, imeDnevnika));
+  elIzvozLekovi.addEventListener('click', () => izvezi(lekoviUTabelu, imeLekova));
 
   function iscrtaj() {
     const sad = rezim();

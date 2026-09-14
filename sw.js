@@ -1,7 +1,7 @@
 /* Artron — service worker.
    Pri svakoj izmeni podići VERZIJU, inače korisnik i dalje gleda staru verziju. */
 
-const VERZIJA = 'v13';
+const VERZIJA = 'v14';
 const LJUSKA = `ljuska-${VERZIJA}`;
 const PODACI = `podaci-${VERZIJA}`;
 
@@ -28,6 +28,7 @@ const ZA_KES = [
   './js/trajnost.js',
   './js/kopija.js',
   './js/lekovi.js',
+  './js/kalendar.js',
   './js/ekran-lekovi.js',
   './js/ekran-lek.js',
   './js/telo/regioni.js',
