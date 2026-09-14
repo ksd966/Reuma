@@ -116,9 +116,7 @@
       <span class="jacina__broj tabular" id="bol-broj">0</span>
       <span class="jacina__rec" id="bol-rec">bez bola</span>
     </div>
-    <input class="klizac" id="bol-klizac" type="range" min="0" max="10" step="1" value="0"
-           aria-label="Ukupna jačina bola od 0 do 10">
-    <div class="skala" aria-hidden="true"><span>0</span><span>5</span><span>10</span></div>
+    <div id="bol-skala"></div>
     <button class="dugme dugme--bez-bola dugme--usko" id="unos-bez-bola" type="button">
       Ništa me ne boli — sačuvaj
     </button>
@@ -321,11 +319,9 @@
     <span class="jacina__rec" id="jacina-rec">umerena</span>
   </div>
 
-  <input class="klizac" id="klizac" type="range" min="0" max="10" step="1" value="5"
-         aria-label="Jačina bola od 0 do 10">
-  <div class="skala" aria-hidden="true"><span>0</span><span>5</span><span>10</span></div>
+  <div id="jacina-skala"></div>
 
-  <h3 class="naslov-odeljka" style="margin:16px 0 8px">Kakav je bol</h3>
+  <h3 class="naslov-odeljka" style="margin:18px 0 8px">Kakav je bol</h3>
   <div class="vrste" id="vrste" role="group" aria-label="Vrsta bola"></div>
 
   <div id="zglob-upalno" hidden>

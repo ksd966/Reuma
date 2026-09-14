@@ -26,16 +26,16 @@
   --s-serious:#ec835a;
   --s-critical:#d03b3b;
 
-  --radius:18px;
-  --radius-sm:12px;
+  --radius:20px;
+  --radius-sm:14px;
 
   --safe-top:env(safe-area-inset-top,0px);
   --safe-bottom:env(safe-area-inset-bottom,0px);
   --safe-left:env(safe-area-inset-left,0px);
   --safe-right:env(safe-area-inset-right,0px);
-  --gutter:clamp(16px,4vw,32px);
+  --gutter:clamp(18px,4.5vw,32px);
 
-  --meta:44px;               /* najmanja meta za dodir */
+  --meta:48px;               /* najmanja meta za dodir; Apple traži bar 44 */
 }
 
 @media (prefers-color-scheme:light){
@@ -55,7 +55,7 @@ body{
   background:var(--ground);
   color:var(--text);
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,"Segoe UI",Roboto,sans-serif;
-  font-size:15px;line-height:1.55;
+  font-size:16px;line-height:1.6;
   -webkit-font-smoothing:antialiased;
 
   /* Bez označavanja teksta prevlačenjem, bez menija na dugi pritisak,

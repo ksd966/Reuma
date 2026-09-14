@@ -7,6 +7,7 @@
 
 import { VRSTE_BOLA, stepenZa } from './telo/regioni.js';
 import { rezim } from './skladiste.js';
+import { napraviSkalu, recZaJacinu } from './skala.js';
 
 export function napraviList({ naPotvrdu, naUklanjanje, naZatvaranje }) {
   const list = document.getElementById('list');
@@ -15,7 +16,7 @@ export function napraviList({ naPotvrdu, naUklanjanje, naZatvaranje }) {
   const elPod = document.getElementById('list-pod');
   const elBroj = document.getElementById('jacina-broj');
   const elRec = document.getElementById('jacina-rec');
-  const klizac = document.getElementById('klizac');
+  const elSkala = document.getElementById('jacina-skala');
   const elVrste = document.getElementById('vrste');
   const dUkloni = document.getElementById('ukloni');
   const dPotvrdi = document.getElementById('potvrdi');
@@ -61,24 +62,25 @@ export function napraviList({ naPotvrdu, naUklanjanje, naZatvaranje }) {
     }
   }
 
+  const skala = napraviSkalu(elSkala, {
+    oznaka: 'Jačina bola od 0 do 10',
+    naIzbor: osveziJacinu
+  });
+
   function osveziJacinu() {
-    const j = Number(klizac.value);
+    const j = skala.vrednost() ?? 0;
     elBroj.textContent = String(j);
+    elBroj.style.color = j === 0 ? 'var(--dim)' : stepenZa(j).boja;
     if (j === 0) {
       elRec.textContent = imaZnak() ? 'bez bola, ali označen' : 'bez bola';
-      elBroj.style.color = 'var(--dim)';
       /* Nula bez ijednog znaka znači da region više ništa ne nosi — potvrda
          ga tada uklanja, umesto da ostavi prazan zapis. */
       dPotvrdi.textContent = (!imaZnak() && tekuci?.postojeci) ? 'Ukloni oznaku' : 'Potvrdi';
     } else {
-      const s = stepenZa(j);
-      elRec.textContent = s.ime;
-      elBroj.style.color = s.boja;
+      elRec.textContent = recZaJacinu(j);
       dPotvrdi.textContent = 'Potvrdi';
     }
   }
-
-  klizac.addEventListener('input', osveziJacinu);
 
   function otvori(region, postojeci, poreklo) {
     tekuci = { id: region.id, postojeci: !!postojeci };
@@ -86,7 +88,7 @@ export function napraviList({ naPotvrdu, naUklanjanje, naZatvaranje }) {
 
     elIme.textContent = region.ime;
     elPod.textContent = postojeci ? 'Izmena već unetog bola' : 'Jačina bola i kakav je';
-    klizac.value = String(postojeci?.jacina ?? 5);
+    skala.postavi(postojeci?.jacina ?? 5);
     vrsta = postojeci?.vrsta ?? VRSTE_BOLA[0].id;
     dUkloni.hidden = !postojeci;
 
@@ -105,7 +107,7 @@ export function napraviList({ naPotvrdu, naUklanjanje, naZatvaranje }) {
     requestAnimationFrame(() => {
       list.dataset.otvoren = 'da';
       zastor.dataset.otvoren = 'da';
-      klizac.focus({ preventScroll: true });
+      elSkala.querySelector('button[aria-pressed="true"]')?.focus({ preventScroll: true });
     });
   }
 
@@ -122,7 +124,7 @@ export function napraviList({ naPotvrdu, naUklanjanje, naZatvaranje }) {
 
   dPotvrdi.addEventListener('click', () => {
     if (!tekuci) return;
-    const j = Number(klizac.value);
+    const j = skala.vrednost() ?? 0;
     if (j === 0 && !imaZnak()) {
       naUklanjanje?.(tekuci.id);
     } else {

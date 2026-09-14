@@ -190,6 +190,7 @@ css/komponente.css      kartica, list odozdo, klizač, spisak, legenda
 css/ekrani.css          pregled dana i unos
 js/app.js               pokretanje i prelaz između ekrana
 js/skladiste.js         stanje, datumi, izvedene mere, izvoz i uvoz
+js/skala.js             tabla brojeva 0–10, zajednička za sve mere
 js/trajnost.js          IndexedDB, trajno skladište, stanje čuvanja
 js/kopija.js            čuvanje u datoteku i vraćanje iz nje
 js/polja.js             šta se pita uz koji deo dana, po režimu

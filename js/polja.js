@@ -34,14 +34,14 @@ const OSNOVNA = {
 
   podne: [
     {
-      id: 'opterecenje', vrsta: 'klizac', ime: 'Opterećenje',
+      id: 'opterecenje', vrsta: 'mera', ime: 'Opterećenje',
       opis: 'Koliko ste se do sada naprezali', min: 0, max: 10
     },
-    { id: 'umor', vrsta: 'klizac', ime: 'Umor', min: 0, max: 10 }
+    { id: 'umor', vrsta: 'mera', ime: 'Umor', min: 0, max: 10 }
   ],
 
   vece: [
-    { id: 'umor', vrsta: 'klizac', ime: 'Umor', min: 0, max: 10 },
+    { id: 'umor', vrsta: 'mera', ime: 'Umor', min: 0, max: 10 },
     { id: 'kvalitetDana', vrsta: 'izbor', ime: 'Kakav je bio dan u celini', opcije: OCENA5 }
   ]
 };
@@ -49,7 +49,7 @@ const OSNOVNA = {
 /* Kod fibromijalgije umor i magla u glavi umeju da budu teži od samog bola,
    pa se prate zasebno i svaki put. */
 const MAGLA = {
-  id: 'magla', vrsta: 'klizac', ime: 'Magla u glavi',
+  id: 'magla', vrsta: 'mera', ime: 'Magla u glavi',
   opis: 'Koliko vam je bilo teško da se skoncentrišete', min: 0, max: 10
 };
 
@@ -59,7 +59,7 @@ const FIBRO = {
       id: 'neosvezavajucSan', vrsta: 'prekidac', ime: 'Neosvežavajući san',
       opis: 'Spavali ste, ali se niste odmorili'
     },
-    { id: 'umor', vrsta: 'klizac', ime: 'Umor', min: 0, max: 10 },
+    { id: 'umor', vrsta: 'mera', ime: 'Umor', min: 0, max: 10 },
     MAGLA
   ],
   podne: [

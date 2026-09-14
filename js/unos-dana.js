@@ -13,6 +13,7 @@ import { REGIONI, GRUPE, PO_ID, stepenZa } from './telo/regioni.js';
 /* Ista boja kao na mapi tela za zglob koji je otečen a ne boli. */
 const BOJA_OTEKLINE = '#5A6FD6';
 import { poljaZa } from './polja.js';
+import { napraviSkalu, recZaJacinu, recZaMeru } from './skala.js';
 import {
   DELOVI, dohvatiUnos, upisiUnos, obrisiUnos, imeDana, punDatum, sadaHHMM, rezim
 } from './skladiste.js';
@@ -23,7 +24,7 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
   const elPogledi = document.getElementById('pogledi');
   const elBolBroj = document.getElementById('bol-broj');
   const elBolRec = document.getElementById('bol-rec');
-  const elBolKlizac = document.getElementById('bol-klizac');
+  const elBolSkala = document.getElementById('bol-skala');
   const elSacuvaj = document.getElementById('sacuvaj');
   const elObrisi = document.getElementById('obrisi-unos');
   const elLegendaOblik = document.getElementById('legenda-oblik');
@@ -129,19 +130,17 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
   }
 
   /* ── ukupna jačina ──────────────────────────────────────────────────── */
+  const bolSkala = napraviSkalu(elBolSkala, {
+    oznaka: 'Ukupna jačina bola od 0 do 10',
+    naIzbor: osveziBol
+  });
+
   function osveziBol() {
-    const j = Number(elBolKlizac.value);
+    const j = bolSkala.vrednost() ?? 0;
     elBolBroj.textContent = String(j);
-    if (j === 0) {
-      elBolRec.textContent = 'bez bola';
-      elBolBroj.style.color = 'var(--dim)';
-    } else {
-      const s = stepenZa(j);
-      elBolRec.textContent = s.ime;
-      elBolBroj.style.color = s.boja;
-    }
+    elBolRec.textContent = recZaJacinu(j);
+    elBolBroj.style.color = j === 0 ? 'var(--dim)' : stepenZa(j).boja;
   }
-  elBolKlizac.addEventListener('input', osveziBol);
 
   /* ── pitanja uz deo dana ────────────────────────────────────────────── */
   function iscrtajDodatna() {
@@ -156,12 +155,12 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
 
     const crtaci = {
       izbor: poljeIzbor,
-      klizac: poljeKlizac,
+      mera: poljeMere,
       prekidac: poljePrekidac,
       viseizbor: poljeViseizbor
     };
     for (const polje of polja) {
-      elDodatna.appendChild((crtaci[polje.vrsta] ?? poljeKlizac)(polje));
+      elDodatna.appendChild((crtaci[polje.vrsta] ?? poljeMere)(polje));
     }
   }
 
@@ -261,7 +260,7 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
     return okvir;
   }
 
-  function poljeKlizac(polje) {
+  function poljeMere(polje) {
     const okvir = zaglavljePolja(polje);
 
     const prikaz = document.createElement('div');
@@ -271,44 +270,31 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
     const rec = document.createElement('span');
     rec.className = 'polje__rec';
     prikaz.append(broj, rec);
+    okvir.appendChild(prikaz);
 
-    const klizac = document.createElement('input');
-    klizac.type = 'range';
-    klizac.className = 'klizac';
-    klizac.min = String(polje.min);
-    klizac.max = String(polje.max);
-    klizac.step = '1';
-    klizac.setAttribute('aria-label', `${polje.ime} od ${polje.min} do ${polje.max}`);
-    klizac.value = String(dodatnaVrednost[polje.id] ?? 0);
+    const tabla = document.createElement('div');
+    okvir.appendChild(tabla);
 
-    const skala = document.createElement('div');
-    skala.className = 'skala';
-    skala.setAttribute('aria-hidden', 'true');
-    skala.innerHTML = `<span>${polje.min}</span><span>${Math.round((polje.min + polje.max) / 2)}</span><span>${polje.max}</span>`;
-
-    /* Klizač koji korisnik nije dodirnuo NIJE odgovor. Da se vrednost upisuje
-       već pri iscrtavanju, svaki unos bi nosio umor 0 i magla 0, pa bi prosek
-       bio izmišljen podatak. Zato se dok se ne dodirne prikazuje crtica. */
-    const osvezi = () => {
-      const v = dodatnaVrednost[polje.id];
-      if (v == null) {
-        broj.textContent = '—';
-        broj.style.color = 'var(--dim)';
-        rec.textContent = 'nije uneseno';
-        return;
-      }
-      broj.textContent = String(v);
-      broj.style.color = '';
-      rec.textContent = v === 0 ? 'nimalo' : v <= 3 ? 'malo' : v <= 6 ? 'osrednje'
-                      : v <= 8 ? 'mnogo' : 'vrlo mnogo';
-    };
-    klizac.addEventListener('input', () => {
-      dodatnaVrednost[polje.id] = Number(klizac.value);
-      osvezi();
+    /* Polje koje korisnik nije dodirnuo NIJE odgovor — dok se ne dodirne stoji
+       crtica. Da se vrednost upisivala već pri iscrtavanju, svaki unos bi
+       nosio umor 0 i magla 0, pa bi prosek bio izmišljen podatak. */
+    const skala = napraviSkalu(tabla, {
+      min: polje.min, max: polje.max,
+      oznaka: `${polje.ime} od ${polje.min} do ${polje.max}`,
+      bojiPoJacini: false,
+      praznoDozvoljeno: true,
+      naIzbor: (v) => { dodatnaVrednost[polje.id] = v ?? undefined; osvezi(); }
     });
-    osvezi();
 
-    okvir.append(prikaz, klizac, skala);
+    function osvezi() {
+      const v = dodatnaVrednost[polje.id];
+      broj.textContent = v == null ? '—' : String(v);
+      broj.style.color = v == null ? 'var(--dim)' : '';
+      rec.textContent = recZaMeru(v);
+    }
+
+    skala.postavi(dodatnaVrednost[polje.id] ?? null);
+    osvezi();
     return okvir;
   }
 
@@ -318,7 +304,7 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
     deo = noviDeo;
     const unos = dohvatiUnos(kljuc, deo);
 
-    elBolKlizac.value = String(unos?.bol ?? 0);
+    bolSkala.postavi(unos?.bol ?? 0);
     osveziBol();
 
     mapa.ocistiSve();
@@ -347,7 +333,7 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
     const regioni = {};
     for (const [id, r] of mapa.svaStanja()) regioni[id] = r;
 
-    const unos = { bol: Number(elBolKlizac.value), vreme: sadaHHMM(), regioni };
+    const unos = { bol: bolSkala.vrednost() ?? 0, vreme: sadaHHMM(), regioni };
     for (const polje of poljaZa(deo, rezim())) {
       const v = dodatnaVrednost[polje.id];
       if (v == null) continue;
@@ -366,7 +352,7 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
 
   /* Jedan dodir za deo dana u kom ništa ne boli: nula, bez ijednog regiona. */
   elBezBola.addEventListener('click', () => {
-    elBolKlizac.value = '0';
+    bolSkala.postavi(0);
     osveziBol();
     for (const id of [...mapa.svaStanja().keys()]) {
       mapa.postaviStanje(id, null);
