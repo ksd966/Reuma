@@ -43,6 +43,8 @@ export const REAKCIJE = [
 
 /** Ciklus se zadaje u danima; ponuđeni razmaci pokrivaju uobičajene terapije. */
 export const CIKLUSI = [
+  { v: 3,   ime: 'svaka 3 dana' },
+  { v: 4,   ime: 'svaka 4 dana' },
   { v: 7,   ime: 'svakih 7 dana' },
   { v: 14,  ime: 'svakih 14 dana' },
   { v: 21,  ime: 'svake 3 nedelje' },
