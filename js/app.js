@@ -10,6 +10,8 @@ import { napraviEkranDana } from './dan.js';
 import { napraviEkranUnosa } from './unos-dana.js';
 import { napraviEkranPodesavanja } from './podesavanja.js';
 import { napraviEkranIzvestaja } from './izvestaj.js';
+import { napraviEkranLekova } from './ekran-lekovi.js';
+import { napraviEkranLeka } from './ekran-lek.js';
 import {
   kljucDana, pomeriDan, jeBuducnost, imeDana, pripremi, upisiSada, stanjeCuvanja
 } from './skladiste.js';
@@ -23,11 +25,14 @@ const ekrani = {
   dan: document.getElementById('ekran-dan'),
   unos: document.getElementById('ekran-unos'),
   izvestaj: document.getElementById('ekran-izvestaj'),
+  lekovi: document.getElementById('ekran-lekovi'),
+  lek: document.getElementById('ekran-lek'),
   podesavanja: document.getElementById('ekran-podesavanja')
 };
 const elNazad = document.getElementById('nazad');
 const elKaPodesavanjima = document.getElementById('ka-podesavanjima');
 const elKaIzvestaju = document.getElementById('ka-izvestaju');
+const elKaLekovima = document.getElementById('ka-lekovima');
 const elZnak = document.getElementById('znak');
 const elNaslov = document.getElementById('naslov');
 const elPodnaslov = document.getElementById('podnaslov');
@@ -72,6 +77,7 @@ function prikazi(ime) {
   elZnak.hidden = !naPocetku;
   elKaPodesavanjima.hidden = !naPocetku;
   elKaIzvestaju.hidden = !naPocetku;
+  elKaLekovima.hidden = !naPocetku;
 
   if (ime === 'unos') {
     const z = ekranUnosa.zaglavlje();
@@ -83,6 +89,13 @@ function prikazi(ime) {
   } else if (ime === 'izvestaj') {
     elNaslov.textContent = 'Izveštaj';
     elPodnaslov.textContent = '';
+  } else if (ime === 'lekovi') {
+    elNaslov.textContent = 'Lekovi';
+    elPodnaslov.textContent = imeDana(tekuciDan);
+  } else if (ime === 'lek') {
+    const z = ekranLeka.zaglavlje();
+    elNaslov.textContent = z.naslov;
+    elPodnaslov.textContent = z.podnaslov;
   } else {
     elNaslov.textContent = 'Artron';
     elPodnaslov.textContent = imeDana(tekuciDan);
@@ -145,6 +158,32 @@ document.getElementById('podsetnik-kasnije').addEventListener('click', () => {
 
 const ekranIzvestaja = napraviEkranIzvestaja();
 
+/* Lekovi se vraćaju na spisak, a spisak na pregled dana — zato ekran lekova
+   pamti odakle se u njega ušlo. */
+let odakleULek = 'lekovi';
+
+const ekranLekova = napraviEkranLekova({
+  naOtvaranjeLeka: (id) => { odakleULek = 'lekovi'; ekranLeka.otvori(id); prikazi('lek'); },
+  naJavljanje: javi,
+  naIzmenu: () => ekranDana.iscrtaj(tekuciDan)
+});
+
+const ekranLeka = napraviEkranLeka({
+  naZavrsetak: () => { ekranLekova.iscrtaj(tekuciDan); prikazi(odakleULek); },
+  naJavljanje: javi
+});
+
+elKaLekovima.addEventListener('click', () => {
+  ekranLekova.iscrtaj(tekuciDan);
+  prikazi('lekovi');
+});
+
+document.getElementById('dodaj-lek').addEventListener('click', () => {
+  odakleULek = 'lekovi';
+  ekranLeka.otvori(null);
+  prikazi('lek');
+});
+
 elKaIzvestaju.addEventListener('click', () => {
   ekranIzvestaja.iscrtaj(tekuciDan);
   prikazi('izvestaj');
@@ -156,6 +195,7 @@ elKaPodesavanjima.addEventListener('click', () => {
 });
 
 elNazad.addEventListener('click', () => {
+  if (!ekrani.lek.hidden) { ekranLekova.iscrtaj(tekuciDan); prikazi('lekovi'); return; }
   ekranDana.iscrtaj(tekuciDan);
   prikazi('dan');
 });
@@ -180,7 +220,8 @@ addEventListener('pagehide', () => { upisiSada(); });
 addEventListener('beforeunload', () => { upisiSada(); });
 
 /* Za proveru pri radu na modelu; aplikacija ovo ne koristi. */
-globalThis.artron = { ekranDana, ekranUnosa, ekranPodesavanja, ekranIzvestaja, prikazi };
+globalThis.artron = { ekranDana, ekranUnosa, ekranPodesavanja, ekranIzvestaja,
+                      ekranLekova, ekranLeka, prikazi };
 
 /* ── rad bez mreže ────────────────────────────────────────────────────── */
 if ('serviceWorker' in navigator) {

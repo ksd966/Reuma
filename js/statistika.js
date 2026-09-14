@@ -7,6 +7,7 @@
  */
 
 import { DELOVI, dohvatiDan, pomeriDan, kljucDana, izKljuca } from './skladiste.js';
+import { primeneLeka } from './lekovi.js';
 
 export const PERIODI = [
   { id: 'nedelja', ime: 'Nedelja',   dana: 7,   grupa: 'dan' },
@@ -159,6 +160,67 @@ export function izvestaj(kraj, period, rezim) {
     prosekUkocenosti: rezim?.upalni
       ? Math.round(prosek(sazeci.map(s => s.ukocenost).filter(x => x != null)) ?? NaN) || null
       : null
+  };
+}
+
+/**
+ * Kako bol ide u odnosu na dan ciklusa biološke terapije.
+ *
+ * Ovo je prikaz koji lekar traži: ako bol raste pred sledeću dozu, to mora da
+ * se vidi na prvi pogled. Za svaki dan ciklusa (0 = dan primene) skupljaju se
+ * proseci svih dana koji su na tom mestu u ciklusu, pa se uzima njihov prosek.
+ *
+ * Dani bez unosa se preskaču; dan ciklusa u kom nema nijednog zabeleženog dana
+ * ostaje prazan, a ne nula.
+ */
+export function bolPoDanuCiklusa(lekId, ciklusDana, danas = kljucDana()) {
+  const primene = primeneLeka(lekId);
+  if (!primene.length || !ciklusDana) return null;
+
+  const kofe = Array.from({ length: ciklusDana }, () => []);
+  let ciklusa = 0;
+
+  for (let i = 0; i < primene.length; i++) {
+    const pocetak = primene[i].datum;
+    /* Ciklus se završava sledećom primenom, ili posle zadatog broja dana —
+       šta pre dođe. Tekući ciklus staje na današnjem danu. */
+    const sledeca = primene[i + 1]?.datum;
+    const kraj = [sledeca, pomeriDan(pocetak, ciklusDana), pomeriDan(danas, 1)]
+      .filter(Boolean).sort()[0];
+    let imaPodatka = false;
+
+    for (let d = 0; d < ciklusDana; d++) {
+      const kljuc = pomeriDan(pocetak, d);
+      if (kljuc >= kraj) break;
+      const s = sazetakDana(kljuc);
+      if (!s) continue;
+      kofe[d].push(s.prosekBola);
+      imaPodatka = true;
+    }
+    if (imaPodatka) ciklusa++;
+  }
+
+  const tacke = kofe.map((v, d) => ({
+    dan: d,
+    prosek: v.length ? zaokruzi(prosek(v)) : null,
+    brojDana: v.length
+  }));
+
+  const saPodatkom = tacke.filter(t => t.prosek != null);
+  if (saPodatkom.length < 2) return { tacke, ciklusa, dovoljno: false, ciklusDana };
+
+  /* Poređenje prve i poslednje trećine ciklusa — da li bol raste pred dozu. */
+  const trecina = Math.max(1, Math.floor(ciklusDana / 3));
+  const pocetni = tacke.slice(0, trecina).filter(t => t.prosek != null).map(t => t.prosek);
+  const zavrsni = tacke.slice(-trecina).filter(t => t.prosek != null).map(t => t.prosek);
+  const razlikaKrajeva = (pocetni.length && zavrsni.length)
+    ? zaokruzi(prosek(zavrsni) - prosek(pocetni)) : null;
+
+  return {
+    tacke, ciklusa, ciklusDana, dovoljno: true,
+    pocetakCiklusa: zaokruzi(prosek(pocetni)),
+    krajCiklusa: zaokruzi(prosek(zavrsni)),
+    razlikaKrajeva
   };
 }
 

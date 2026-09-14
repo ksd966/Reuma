@@ -221,6 +221,24 @@ export function upisiBezBola(kljuc, delovi = praznoAStiglo(kljuc)) {
   return upisi() ? delovi : [];
 }
 
+/* ── opšti pristup odeljcima ──────────────────────────────────────────── */
+
+/**
+ * Vrati odeljak stanja pod datim imenom, praveći ga ako ga nema.
+ *
+ * Ovo postoji da bi drugi delovi aplikacije (lekovi, kasnije vreme) mogli da
+ * drže svoje podatke i svoju logiku kod sebe, a da i dalje postoji samo jedno
+ * mesto koje zna kako se čuva.
+ */
+export function deoStanja(ime, podrazumevano) {
+  const p = ucitaj();
+  p[ime] ??= podrazumevano;
+  return p[ime];
+}
+
+/** Upiši izmene nastale kroz `deoStanja`. */
+export const sacuvajStanje = () => upisi();
+
 export function podesavanja() {
   return ucitaj().podesavanja;
 }
@@ -312,7 +330,10 @@ export function izvezi() {
     verzija: VERZIJA,
     napravljeno: new Date().toISOString(),
     podesavanja: p.podesavanja,
-    dani: p.dani
+    dani: p.dani,
+    lekovi: p.lekovi ?? [],
+    uzimanja: p.uzimanja ?? [],
+    primene: p.primene ?? []
   }, null, 1);
 }
 
@@ -356,8 +377,23 @@ export function uvezi(tekst) {
   if (k.podesavanja?.rezim) {
     p.podesavanja.rezim = { ...PODRAZUMEVANI_REZIM, ...k.podesavanja.rezim };
   }
+
+  /* Lekovi i zabeležena uzimanja se spajaju po id-ju: kopija donosi ono čega
+     na uređaju nema, a ne briše ono što je u međuvremenu dodato. */
+  let lekova = 0, zapisa = 0;
+  for (const [ime, niz] of [['lekovi', k.lekovi], ['uzimanja', k.uzimanja], ['primene', k.primene]]) {
+    if (!Array.isArray(niz)) continue;
+    p[ime] ??= [];
+    const postojeci = new Set(p[ime].map(x => x.id));
+    for (const x of niz) {
+      if (!x?.id || postojeci.has(x.id)) continue;
+      p[ime].push(x);
+      if (ime === 'lekovi') lekova++; else zapisa++;
+    }
+  }
+
   upisi();
-  return { novih, izmenjenih, ukupno: Object.keys(p.dani).length };
+  return { novih, izmenjenih, ukupno: Object.keys(p.dani).length, lekova, zapisa };
 }
 
 /** Stanje čuvanja za prikaz u podešavanjima. */

@@ -49,6 +49,13 @@
   </svg>
   <span class="topbar__ime" id="naslov">Artron</span>
   <span class="topbar__desno" id="podnaslov"></span>
+  <button class="topbar__zupcanik" id="ka-lekovima" type="button" aria-label="Lekovi">
+    <svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20" fill="none"
+         stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2.2" y="8.4" width="19.6" height="7.2" rx="3.6"/>
+      <path d="M12 8.4v7.2"/>
+    </svg>
+  </button>
   <button class="topbar__zupcanik" id="ka-izvestaju" type="button" aria-label="Izveštaj">
     <svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20" fill="none"
          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -179,6 +186,49 @@
   </div>
 </section>
 
+<!-- ══ EKRAN: LEKOVI ═══════════════════════════════════════════════════ -->
+<section class="ekran strana" id="ekran-lekovi" hidden aria-labelledby="n-lek">
+  <h1 class="samo-citac" id="n-lek">Lekovi</h1>
+  <div id="lekovi-sadrzaj"></div>
+  <button class="dugme dugme--glavno" id="dodaj-lek" type="button" style="width:100%;margin-top:14px">
+    Dodaj lek
+  </button>
+  <p class="podnozje">
+    Artron samo beleži ono što unesete. Ne predlaže doze, ne savetuje promenu
+    terapije i ne upozorava na uzajamna dejstva lekova.
+  </p>
+</section>
+
+<!-- ══ EKRAN: LEK ══════════════════════════════════════════════════════ -->
+<section class="ekran strana" id="ekran-lek" hidden aria-labelledby="n-lek1">
+  <h1 class="samo-citac" id="n-lek1">Lek</h1>
+
+  <div class="polje">
+    <label class="polje__ime" for="lek-naziv">Naziv</label>
+    <input class="unos" id="lek-naziv" type="text" autocomplete="off"
+           enterkeyhint="next" placeholder="npr. Metotreksat">
+  </div>
+
+  <div class="polje">
+    <label class="polje__ime" for="lek-doza">Doza</label>
+    <input class="unos" id="lek-doza" type="text" autocomplete="off"
+           placeholder="npr. 15 mg">
+  </div>
+
+  <div class="polje">
+    <p class="polje__ime" id="lek-vrsta-ime">Kako se uzima</p>
+    <div class="izbori" id="lek-vrsta" role="group" aria-labelledby="lek-vrsta-ime"></div>
+  </div>
+
+  <div id="lek-dodatno"></div>
+
+  <div class="radnje radnje--kraj">
+    <button class="dugme dugme--tiho" id="lek-skloni" type="button" hidden>Skloni</button>
+    <button class="dugme dugme--glavno" id="lek-sacuvaj" type="button">Sačuvaj</button>
+  </div>
+  <p class="uputstvo-levo" id="lek-poruka" style="margin-top:10px"></p>
+</section>
+
 <!-- ══ EKRAN: IZVEŠTAJ ═════════════════════════════════════════════════ -->
 <section class="ekran strana" id="ekran-izvestaj" hidden aria-labelledby="n-izv">
   <h1 class="samo-citac" id="n-izv">Izveštaj</h1>
@@ -247,6 +297,40 @@
   <div class="radnje">
     <button class="dugme dugme--tiho" id="ukloni" type="button">Ukloni</button>
     <button class="dugme dugme--glavno" id="potvrdi" type="button">Potvrdi</button>
+  </div>
+</div>
+
+<div class="list" id="list-primena" role="dialog" aria-modal="true"
+     aria-labelledby="primena-ime" hidden>
+  <div class="list__rucka" aria-hidden="true"></div>
+  <p class="list__ime" id="primena-ime">Primena</p>
+  <p class="list__pod" id="primena-pod"></p>
+
+  <div class="polje">
+    <label class="polje__ime" for="primena-datum">Datum primene</label>
+    <input class="unos" id="primena-datum" type="date">
+  </div>
+
+  <div class="polje">
+    <p class="polje__ime" id="primena-mesto-ime">Mesto primene</p>
+    <p class="polje__opis" id="primena-predlog"></p>
+    <div class="izbori" id="primena-mesto" role="group" aria-labelledby="primena-mesto-ime"></div>
+  </div>
+
+  <div class="polje">
+    <p class="polje__ime" id="primena-reakcija-ime">Reakcija na mestu primene</p>
+    <div class="izbori" id="primena-reakcija" role="group" aria-labelledby="primena-reakcija-ime"></div>
+  </div>
+
+  <div class="polje">
+    <label class="polje__ime" for="primena-beleska">Tegobe posle primene</label>
+    <textarea class="unos unos--visok" id="primena-beleska" rows="3"
+              placeholder="nije obavezno"></textarea>
+  </div>
+
+  <div class="radnje">
+    <button class="dugme dugme--tiho" id="primena-odustani" type="button">Odustani</button>
+    <button class="dugme dugme--glavno" id="primena-potvrdi" type="button">Zabeleži</button>
   </div>
 </div>
 

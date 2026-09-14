@@ -31,6 +31,9 @@ medicinski uređaj.
 - **Izveštaji** — nedelja, mesec, šest meseci i godina: prosečan bol uz
   poređenje sa prethodnim periodom, dana sa unosom, dana bez bolova, najjači
   dan, trend, tok dana u proseku i najčešće pogođeni regioni.
+- **Lekovi** — tri vrste, jer se različito prate: stalni sa potvrdom da su
+  uzeti, po potrebi sa brojačem dnevno i nedeljno, i biološka terapija sa
+  odbrojavanjem, rotacijom mesta primene i grafikom bola po danu ciklusa.
 - **Trajno čuvanje i kopija** — podaci idu u IndexedDB, sa `localStorage` kao
   ogledalom, i mogu se sačuvati u datoteku i vratiti iz nje.
 - Ljuska po dizajn-sistemu, manifest, ikonice, splash i service worker.
@@ -58,6 +61,29 @@ Podešavanja pošteno prikazuju da li je dozvola data.
 
 Vraćanje iz kopije **spaja** dane umesto da ih zameni — vraćanje starije kopije
 ne sme da obriše ono što je u međuvremenu uneto.
+
+### Lekovi i biološka terapija
+
+Spisak lekova se pamti, pa se posle unosi sa nekoliko dodira — stalni se samo
+potvrde, a lek po potrebi ide na jedan dodir plusa. **Koliko je puta uzet lek
+po potrebi sam po sebi govori kako je nedelja prošla**, pa se broji i dnevno i
+za sedam dana unazad.
+
+Kod biološke terapije se vidi odbrojavanje do sledeće doze, koji je dan
+ciklusa, i **koje mesto primene sledi po redu rotacije** — aplikacija ga sama
+predlaže, a može se izabrati i drugo. Beleži se reakcija na mestu primene i
+tegobe posle nje.
+
+Najvažniji prikaz je **bol u odnosu na dan ciklusa**: za svaki dan ciklusa
+(0 je dan primene) sabiraju se svi zabeleženi dani koji su na tom mestu u
+ciklusu. Ako bol raste pred sledeću dozu, to se vidi na prvi pogled i piše
+rečenicom — to je podatak koji lekar traži.
+
+Lek se ne briše nego sklanja: zabeležena uzimanja ostaju u dnevniku, jer je i
+prestanak terapije podatak.
+
+**Aplikacija ne predlaže doze, ne savetuje promenu terapije i ne upozorava na
+uzajamna dejstva lekova.** Samo beleži ono što unesete.
 
 ### Izveštaji
 
@@ -94,8 +120,8 @@ kriterijume — tumačenje je na lekaru.
 
 ## Šta tek dolazi
 
-Lekovi i biološka terapija sa odbrojavanjem, dnevnik po danima, vremenski
-okidači preko Open-Meteo, i izvoz u CSV i JSON.
+Dnevnik po danima, vremenski okidači preko Open-Meteo i izvoz u CSV za lekara.
+Izvoz u JSON već postoji kroz kopiju podataka.
 
 ## Kako radi model tela
 
@@ -155,6 +181,9 @@ js/podesavanja.js       izbor režima praćenja
 js/dan.js               tri polja za dan, tok dana i lični zbir
 js/statistika.js        sažimanje dnevnika u izveštaj za period
 js/izvestaj.js          ekran izveštaja i grafici
+js/lekovi.js            lekovi, uzimanja, primene, odbrojavanje, rotacija
+js/ekran-lekovi.js      spisak, odbrojavanje i grafik ciklusa
+js/ekran-lek.js         unos i izmena jednog leka
 js/unos-dana.js         unos za jedan deo dana
 js/unos.js              list odozdo za unos bola u jednom regionu
 js/telo/regioni.js      36 regiona sa imenima; boje jačine
