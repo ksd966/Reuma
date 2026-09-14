@@ -122,6 +122,43 @@ export function obrisiUnos(kljuc, deo) {
   return upisi();
 }
 
+/**
+ * Delovi dana koji su do sada stigli. Za raniji dan to su sva tri; za danas
+ * samo oni koji su prošli, jer se o veču u devet ujutru ne može ništa reći.
+ */
+export function stigliDelovi(kljuc) {
+  if (jeBuducnost(kljuc)) return [];
+  if (kljuc < kljucDana()) return DELOVI.map(d => d.id);
+  const sat = new Date().getHours();
+  const stigli = ['jutro'];
+  if (sat >= 11) stigli.push('podne');
+  if (sat >= 17) stigli.push('vece');
+  return stigli;
+}
+
+/** Delovi koji su stigli a još nisu popunjeni — ono što „ništa me ne boli" puni. */
+export function praznoAStiglo(kljuc) {
+  const dan = dohvatiDan(kljuc);
+  return stigliDelovi(kljuc).filter(deo => !dan[deo]);
+}
+
+/**
+ * Zabeleži da ništa ne boli, u jednom dodiru.
+ *
+ * Dan bez bolova je podatak koliko i bolan dan — bez njega se u izveštaju ne
+ * vidi razlika između „bilo je dobro" i „nisam stigao da unesem".
+ * Popunjavaju se samo prazni delovi; već uneto se ne dira.
+ */
+export function upisiBezBola(kljuc, delovi = praznoAStiglo(kljuc)) {
+  const p = ucitaj();
+  if (!delovi.length) return [];
+  p.dani[kljuc] ||= {};
+  for (const deo of delovi) {
+    p.dani[kljuc][deo] = { bol: 0, vreme: sadaHHMM(), regioni: {}, upisano: Date.now() };
+  }
+  return upisi() ? delovi : [];
+}
+
 export function podesavanja() {
   return ucitaj().podesavanja;
 }

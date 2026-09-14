@@ -83,11 +83,16 @@ export const VRSTE_BOLA = [
 /**
  * Boje jačine bola. Fiksne su i iste u svetlom i u tamnom režimu — po pravilu
  * iz dizajn-sistema da se boje podataka ne menjaju sa stanjem aplikacije.
- * Boja nikad ne stoji sama: uz obojen region uvek ide i broj.
+ * Boja nikad ne stoji sama: uz obojen region uvek ide i broj, a na grafiku i
+ * visina stubića.
+ *
+ * „Umerena" koristi --s-warn, ne --accent: akcenat je po dizajn-sistemu samo
+ * hrom i nikad podatak. Uz to je razdvojivost od susedne „jake" provereno
+ * bolja — ΔE kod deuteranopije 11,3 umesto 5,0 sa akcentom.
  */
 export const STEPENI = [
   { do: 3,  boja: '#2E9E8F', ime: 'blaga'     },
-  { do: 6,  boja: '#E0A64B', ime: 'umerena'   },
+  { do: 6,  boja: '#FAB219', ime: 'umerena'   },
   { do: 8,  boja: '#EC835A', ime: 'jaka'      },
   { do: 10, boja: '#D03B3B', ime: 'vrlo jaka' }
 ];

@@ -8,12 +8,12 @@
 
 import {
   DELOVI, dohvatiDan, imeDana, punDatum, jeDanas, jeBuducnost,
-  popunjenost, brojRegiona, rezim, zbirDana
+  popunjenost, brojRegiona, rezim, zbirDana, praznoAStiglo, upisiBezBola, obrisiUnos
 } from './skladiste.js';
 import { poljaZa, ispisi } from './polja.js';
 import { stepenZa } from './telo/regioni.js';
 
-export function napraviEkranDana({ naIzborDela, naPromenuDana }) {
+export function napraviEkranDana({ naIzborDela, naPromenuDana, naJavljanje }) {
   const elIme = document.getElementById('dan-ime');
   const elDatum = document.getElementById('dan-datum');
   const elNazad = document.getElementById('dan-nazad');
@@ -22,6 +22,8 @@ export function napraviEkranDana({ naIzborDela, naPromenuDana }) {
   const elTok = document.getElementById('tok');
   const elZbir = document.getElementById('zbir');
   const elNaDanas = document.getElementById('na-danas');
+  const elBezBolova = document.getElementById('bez-bolova');
+  const elBezBolovaPod = document.getElementById('bez-bolova-pod');
 
   let kljuc = null;
 
@@ -38,10 +40,37 @@ export function napraviEkranDana({ naIzborDela, naPromenuDana }) {
     elNapred.disabled = jeBuducnost(nextKljuc(kljuc));
     elNaDanas.hidden = jeDanas(kljuc);
 
+    osveziBezBolova();
     elDelovi.replaceChildren(...DELOVI.map(d => karticaDela(d, dan[d.id])));
     iscrtajTok(dan);
     iscrtajZbir();
   }
+
+  /* Dugme puni samo prazne delove dana koji su već stigli — o veču se u devet
+     ujutru ne može ništa reći. */
+  function osveziBezBolova() {
+    const prazni = praznoAStiglo(kljuc);
+    const imena = prazni.map(id => DELOVI.find(d => d.id === id).ime.toLowerCase());
+    elBezBolova.disabled = prazni.length === 0;
+    elBezBolovaPod.textContent = prazni.length === 0
+      ? 'sve je već uneto za ovaj dan'
+      : `upisuje nulu za: ${imena.join(', ')}`;
+  }
+
+  elBezBolova.addEventListener('click', () => {
+    const upisani = upisiBezBola(kljuc);
+    if (!upisani.length) return;
+    const danKljuc = kljuc;
+    const imena = upisani.map(id => DELOVI.find(d => d.id === id).ime.toLowerCase());
+    iscrtaj(kljuc);
+    naJavljanje?.(`Bez bolova — ${imena.join(', ')}`, {
+      ime: 'Poništi',
+      radnja: () => {
+        for (const deo of upisani) obrisiUnos(danKljuc, deo);
+        iscrtaj(danKljuc);
+      }
+    });
+  });
 
   const nextKljuc = (k) => {
     const [g, m, d] = k.split('-').map(Number);

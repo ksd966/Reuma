@@ -27,6 +27,7 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
   const elSacuvaj = document.getElementById('sacuvaj');
   const elObrisi = document.getElementById('obrisi-unos');
   const elLegendaOblik = document.getElementById('legenda-oblik');
+  const elBezBola = document.getElementById('unos-bez-bola');
 
   let kljuc = null, deo = null, dodatnaVrednost = {};
 
@@ -362,6 +363,17 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
     } else {
       naJavljanje('Nije moglo da se sačuva — nema mesta na uređaju');
     }
+  });
+
+  /* Jedan dodir za deo dana u kom ništa ne boli: nula, bez ijednog regiona. */
+  elBezBola.addEventListener('click', () => {
+    elBolKlizac.value = '0';
+    osveziBol();
+    for (const id of [...mapa.svaStanja().keys()]) {
+      mapa.postaviStanje(id, null);
+      osveziRegion(id);
+    }
+    elSacuvaj.click();
   });
 
   elObrisi.addEventListener('click', () => {

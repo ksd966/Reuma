@@ -49,6 +49,12 @@
   </svg>
   <span class="topbar__ime" id="naslov">Artron</span>
   <span class="topbar__desno" id="podnaslov"></span>
+  <button class="topbar__zupcanik" id="ka-izvestaju" type="button" aria-label="Izveštaj">
+    <svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20" fill="none"
+         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 20V13M10 20V5M16 20v-9M22 20H2"/>
+    </svg>
+  </button>
   <button class="topbar__zupcanik" id="ka-podesavanjima" type="button" aria-label="Podešavanja">
     <svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20" fill="none"
          stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
@@ -94,6 +100,11 @@
   <div class="tok" id="tok" hidden></div>
   <div class="zbir" id="zbir" hidden></div>
 
+  <button class="dugme dugme--bez-bola" id="bez-bolova" type="button">
+    <span class="dugme__glavno-ime">Ništa me ne boli</span>
+    <span class="dugme__pod" id="bez-bolova-pod"></span>
+  </button>
+
   <button class="dugme dugme--danas" id="na-danas" type="button" hidden>Nazad na danas</button>
 
   <p class="podnozje">
@@ -115,6 +126,9 @@
     <input class="klizac" id="bol-klizac" type="range" min="0" max="10" step="1" value="0"
            aria-label="Ukupna jačina bola od 0 do 10">
     <div class="skala" aria-hidden="true"><span>0</span><span>5</span><span>10</span></div>
+    <button class="dugme dugme--bez-bola dugme--usko" id="unos-bez-bola" type="button">
+      Ništa me ne boli — sačuvaj
+    </button>
   </section>
 
   <section class="blok" aria-labelledby="n-mapa">
@@ -130,7 +144,7 @@
 
     <div class="legenda" aria-hidden="true">
       <div><i style="background:#2E9E8F"></i>1–3 blaga</div>
-      <div><i style="background:#E0A64B"></i>4–6 umerena</div>
+      <div><i style="background:#FAB219"></i>4–6 umerena</div>
       <div><i style="background:#EC835A"></i>7–8 jaka</div>
       <div><i style="background:#D03B3B"></i>9–10 vrlo jaka</div>
     </div>
@@ -155,6 +169,13 @@
     <button class="dugme dugme--tiho" id="obrisi-unos" type="button" hidden>Obriši unos</button>
     <button class="dugme dugme--glavno" id="sacuvaj" type="button">Sačuvaj</button>
   </div>
+</section>
+
+<!-- ══ EKRAN: IZVEŠTAJ ═════════════════════════════════════════════════ -->
+<section class="ekran strana" id="ekran-izvestaj" hidden aria-labelledby="n-izv">
+  <h1 class="samo-citac" id="n-izv">Izveštaj</h1>
+  <div class="periodi" id="periodi" role="group" aria-label="Dužina perioda"></div>
+  <div id="izvestaj-sadrzaj"></div>
 </section>
 
 <!-- ══ EKRAN: PODEŠAVANJA ══════════════════════════════════════════════ -->

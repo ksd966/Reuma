@@ -23,7 +23,31 @@ medicinski uređaj.
   je gore ujutru ili uveče.
 - **Dva režima** — upalni reumatizam i fibromijalgija, može i oba istovremeno.
   Režim menja samo šta se pita pri unosu, ne izgled aplikacije.
+- **Ništa me ne boli** — jedan dodir beleži dan bez bolova. Popunjava samo one
+  delove dana koji su već stigli (o veču se u devet ujutru ne može ništa reći)
+  i ne dira ono što je već uneto; uz javljanje ide i „Poništi". Dan bez bolova
+  je podatak koliko i bolan dan — bez njega se u izveštaju ne vidi razlika
+  između „bilo je dobro" i „nisam stigao da unesem".
+- **Izveštaji** — nedelja, mesec, šest meseci i godina: prosečan bol uz
+  poređenje sa prethodnim periodom, dana sa unosom, dana bez bolova, najjači
+  dan, trend, tok dana u proseku i najčešće pogođeni regioni.
 - Ljuska po dizajn-sistemu, manifest, ikonice, splash i service worker.
+
+### Izveštaji
+
+Trend se sažima prema dužini perioda: nedelja i mesec po danu, šest meseci po
+nedelji, godina po mesecu. Dani bez unosa se **ne popunjavaju nulom** — na
+grafiku ostaju kao tanka crtica na osnovi i ne ulaze u prosek, jer bi prosek od
+nepostojećih dana bio izmišljen podatak. Visina stubića nosi jačinu, a boja je
+samo pojačava.
+
+### Boje jačine bola
+
+Četiri stepena, fiksna u oba režima: `#2E9E8F` blaga, `#FAB219` umerena,
+`#EC835A` jaka, `#D03B3B` vrlo jaka. Umerena namerno **nije** `--accent` —
+akcenat je po dizajn-sistemu samo hrom i nikad podatak. Razdvojivost je
+proverena, ne procenjena: ΔE kod deuteranopije 11,3 (sa akcentom je bilo 5,0).
+Boja nigde ne stoji sama — uz nju uvek ide broj, oblik ili visina stubića.
 
 ### Režimi
 
@@ -100,7 +124,9 @@ js/app.js               pokretanje i prelaz između ekrana
 js/skladiste.js         localStorage, datumi, izvedene mere
 js/polja.js             šta se pita uz koji deo dana, po režimu
 js/podesavanja.js       izbor režima praćenja
-js/dan.js               tri polja za dan i tok dana
+js/dan.js               tri polja za dan, tok dana i lični zbir
+js/statistika.js        sažimanje dnevnika u izveštaj za period
+js/izvestaj.js          ekran izveštaja i grafici
 js/unos-dana.js         unos za jedan deo dana
 js/unos.js              list odozdo za unos bola u jednom regionu
 js/telo/regioni.js      36 regiona sa imenima; boje jačine
