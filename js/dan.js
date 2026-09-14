@@ -8,7 +8,8 @@
 
 import {
   DELOVI, dohvatiDan, imeDana, punDatum, jeDanas, jeBuducnost,
-  popunjenost, brojRegiona, rezim, zbirDana, praznoAStiglo, upisiBezBola, obrisiUnos
+  popunjenost, brojRegiona, rezim, zbirDana, praznoAStiglo, upisiBezBola, obrisiUnos,
+  sviDani
 } from './skladiste.js';
 import { poljaZa, ispisi } from './polja.js';
 import { stepenZa } from './telo/regioni.js';
@@ -19,6 +20,7 @@ export function napraviEkranDana({ naIzborDela, naPromenuDana, naJavljanje }) {
   const elNazad = document.getElementById('dan-nazad');
   const elNapred = document.getElementById('dan-napred');
   const elDelovi = document.getElementById('delovi');
+  const elUvod = document.getElementById('uvod');
   const elTok = document.getElementById('tok');
   const elZbir = document.getElementById('zbir');
   const elNaDanas = document.getElementById('na-danas');
@@ -41,6 +43,9 @@ export function napraviEkranDana({ naIzborDela, naPromenuDana, naJavljanje }) {
     elNaDanas.hidden = jeDanas(kljuc);
 
     osveziBezBolova();
+    /* Dok dnevnik nema nijedan unos, mora da se kaže šta se radi: mapa tela
+       stoji iza dodira na polje, a sitno „+ dodaj" to ne nagoveštava. */
+    elUvod.hidden = imaIkakvihUnosa();
     elDelovi.replaceChildren(...DELOVI.map(d => karticaDela(d, dan[d.id])));
     iscrtajTok(dan);
     iscrtajZbir();
@@ -71,6 +76,8 @@ export function napraviEkranDana({ naIzborDela, naPromenuDana, naJavljanje }) {
       }
     });
   });
+
+  const imaIkakvihUnosa = () => Object.keys(sviDani()).length > 0;
 
   const nextKljuc = (k) => {
     const [g, m, d] = k.split('-').map(Number);
@@ -120,9 +127,9 @@ export function napraviEkranDana({ naIzborDela, naPromenuDana, naJavljanje }) {
       dno.appendChild(regioni);
       dno.appendChild(meraPopunjenosti(popunjenost(deo.id, unos, rezim())));
     } else {
-      const dodaj = document.createElement('p');
-      dodaj.className = 'deo__regioni';
-      dodaj.textContent = '+ dodaj';
+      const dodaj = document.createElement('span');
+      dodaj.className = 'deo__dodaj';
+      dodaj.textContent = 'Unesi';
       dno.appendChild(dodaj);
     }
     b.appendChild(dno);

@@ -161,6 +161,8 @@ export const sadaHHMM = () => {
 
 /* ── unosi ────────────────────────────────────────────────────────────── */
 
+export const sviDani = () => ucitaj().dani;
+
 export function dohvatiDan(kljuc) {
   return ucitaj().dani[kljuc] ?? {};
 }

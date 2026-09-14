@@ -464,3 +464,20 @@ body[data-dno="da"] .strana{padding-bottom:calc(78px + var(--safe-bottom))}
 
 /* Strana se završava iznad prikovanih dugmadi. */
 #ekran-unos{padding-bottom:calc(92px + var(--safe-bottom))}
+
+/* ── uvodna rečenica dok je dnevnik prazan ──────────────────────────── */
+.uvod{
+  color:var(--muted);font-size:13.5px;line-height:1.55;
+  margin:0 0 12px;padding:12px 14px;
+  border:1px solid var(--line);border-left:3px solid var(--accent);
+  border-radius:var(--radius-sm);background:var(--surface);
+}
+.uvod b{color:var(--text);font-weight:600}
+
+/* Prazno polje mora da izgleda kao nešto što se dodiruje. */
+.deo__dodaj{
+  align-self:flex-start;
+  padding:6px 12px;border-radius:99px;
+  border:1px solid var(--accent);color:var(--accent);
+  font-size:12.5px;font-weight:600;
+}
