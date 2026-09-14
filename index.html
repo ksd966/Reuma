@@ -49,32 +49,6 @@
   </svg>
   <span class="topbar__ime" id="naslov">Artron</span>
   <span class="topbar__desno" id="podnaslov"></span>
-  <button class="topbar__zupcanik" id="ka-lekovima" type="button" aria-label="Lekovi">
-    <svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20" fill="none"
-         stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="2.2" y="8.4" width="19.6" height="7.2" rx="3.6"/>
-      <path d="M12 8.4v7.2"/>
-    </svg>
-  </button>
-  <button class="topbar__zupcanik" id="ka-izvestaju" type="button" aria-label="Izveštaj">
-    <svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20" fill="none"
-         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M4 20V13M10 20V5M16 20v-9M22 20H2"/>
-    </svg>
-  </button>
-  <button class="topbar__zupcanik" id="ka-podesavanjima" type="button" aria-label="Podešavanja">
-    <svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20" fill="none"
-         stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="12" r="3.1"/>
-      <path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3
-               1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1
-               a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1
-               A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3
-               H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1
-               a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1
-               a1.6 1.6 0 0 0-1.5 1z"/>
-    </svg>
-  </button>
 </header>
 
 <main>
@@ -180,7 +154,7 @@
     <div class="spisak" id="spisak"></div>
   </section>
 
-  <div class="radnje radnje--kraj">
+  <div class="radnje radnje--lepljive">
     <button class="dugme dugme--tiho" id="obrisi-unos" type="button" hidden>Obriši unos</button>
     <button class="dugme dugme--glavno" id="sacuvaj" type="button">Sačuvaj</button>
   </div>
@@ -265,6 +239,46 @@
 </section>
 
 </main>
+
+<nav class="dno" id="dno" aria-label="Glavna navigacija">
+  <button type="button" data-ekran="dan" aria-current="page">
+    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="4.5" width="18" height="16" rx="3"/>
+      <path d="M3 9.5h18M8 2.8v3.4M16 2.8v3.4"/>
+    </svg>
+    <span>Dan</span>
+  </button>
+  <button type="button" data-ekran="lekovi">
+    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2.2" y="8.4" width="19.6" height="7.2" rx="3.6"/>
+      <path d="M12 8.4v7.2"/>
+    </svg>
+    <span>Lekovi</span>
+  </button>
+  <button type="button" data-ekran="izvestaj">
+    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor"
+         stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 20V13M10 20V5M16 20v-9M22 20H2"/>
+    </svg>
+    <span>Izveštaj</span>
+  </button>
+  <button type="button" data-ekran="podesavanja">
+    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor"
+         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3.1"/>
+      <path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3
+               1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1
+               a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1
+               A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3
+               H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1
+               a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1
+               a1.6 1.6 0 0 0-1.5 1z"/>
+    </svg>
+    <span>Podešavanja</span>
+  </button>
+</nav>
 
 <div class="zastor" id="zastor" hidden></div>
 

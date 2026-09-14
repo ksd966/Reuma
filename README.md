@@ -150,6 +150,11 @@ koju ništa ne zaklanja. Kičma ima samo zadnju — spreda je trup stvarno zakla
 Prst pogađa u tri koraka: tačka na 22 px, pa zrak kroz telo, pa najbliža tačka
 u krugu od 44 px. Promašaj za koji piksel tako ne prođe bez ičega.
 
+Ako WebGL na uređaju nije dostupan, umesto praznog pravougaonika stoji poruka,
+a unos se obavlja iz spiska regiona — potpuno isto. Platno se osvežava tek
+pošto je ekran prikazan: dok je sakriven nema veličinu, a oslanjati se samo na
+`ResizeObserver` nije pouzdano.
+
 ## Pokretanje
 
 Statična aplikacija, bez build koraka:

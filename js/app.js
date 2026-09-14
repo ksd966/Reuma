@@ -30,9 +30,7 @@ const ekrani = {
   podesavanja: document.getElementById('ekran-podesavanja')
 };
 const elNazad = document.getElementById('nazad');
-const elKaPodesavanjima = document.getElementById('ka-podesavanjima');
-const elKaIzvestaju = document.getElementById('ka-izvestaju');
-const elKaLekovima = document.getElementById('ka-lekovima');
+const elDno = document.getElementById('dno');
 const elZnak = document.getElementById('znak');
 const elNaslov = document.getElementById('naslov');
 const elPodnaslov = document.getElementById('podnaslov');
@@ -72,12 +70,17 @@ function sakrijJavljanje() {
 /* ── ekrani ───────────────────────────────────────────────────────────── */
 function prikazi(ime) {
   for (const [id, el] of Object.entries(ekrani)) el.hidden = id !== ime;
-  const naPocetku = ime === 'dan';
-  elNazad.hidden = naPocetku;
-  elZnak.hidden = !naPocetku;
-  elKaPodesavanjima.hidden = !naPocetku;
-  elKaIzvestaju.hidden = !naPocetku;
-  elKaLekovima.hidden = !naPocetku;
+  /* Traka pri dnu stoji na glavnim ekranima; na podekranima je zamenjuje
+     strelica nazad i lepljivo dugme za čuvanje. */
+  const glavni = ['dan', 'lekovi', 'izvestaj', 'podesavanja'].includes(ime);
+  elNazad.hidden = glavni;
+  elZnak.hidden = !glavni;
+  elDno.hidden = !glavni;
+  document.body.dataset.dno = glavni ? 'da' : 'ne';
+  for (const b of elDno.children) {
+    if (b.dataset.ekran === ime) b.setAttribute('aria-current', 'page');
+    else b.removeAttribute('aria-current');
+  }
 
   if (ime === 'unos') {
     const z = ekranUnosa.zaglavlje();
@@ -107,6 +110,8 @@ const ekranDana = napraviEkranDana({
   naIzborDela: (deo) => {
     ekranUnosa.otvori(tekuciDan, deo);
     prikazi('unos');
+    /* Tek sada platno ima veličinu — dok je ekran bio sakriven, bila je nula. */
+    ekranUnosa.osveziMapu();
   },
   naJavljanje: javi,
   naPromenuDana: (koliko) => {
@@ -173,10 +178,16 @@ const ekranLeka = napraviEkranLeka({
   naJavljanje: javi
 });
 
-elKaLekovima.addEventListener('click', () => {
-  ekranLekova.iscrtaj(tekuciDan);
-  prikazi('lekovi');
-});
+/* Traka pri dnu vodi na četiri glavna ekrana. */
+const naGlavni = {
+  dan:         () => { ekranDana.iscrtaj(tekuciDan); prikazi('dan'); osveziPodsetnik(); },
+  lekovi:      () => { ekranLekova.iscrtaj(tekuciDan); prikazi('lekovi'); },
+  izvestaj:    () => { ekranIzvestaja.iscrtaj(tekuciDan); prikazi('izvestaj'); },
+  podesavanja: () => { ekranPodesavanja.iscrtaj(); prikazi('podesavanja'); }
+};
+for (const b of elDno.children) {
+  b.addEventListener('click', () => naGlavni[b.dataset.ekran]?.());
+}
 
 document.getElementById('dodaj-lek').addEventListener('click', () => {
   odakleULek = 'lekovi';
@@ -184,20 +195,9 @@ document.getElementById('dodaj-lek').addEventListener('click', () => {
   prikazi('lek');
 });
 
-elKaIzvestaju.addEventListener('click', () => {
-  ekranIzvestaja.iscrtaj(tekuciDan);
-  prikazi('izvestaj');
-});
-
-elKaPodesavanjima.addEventListener('click', () => {
-  ekranPodesavanja.iscrtaj();
-  prikazi('podesavanja');
-});
-
 elNazad.addEventListener('click', () => {
-  if (!ekrani.lek.hidden) { ekranLekova.iscrtaj(tekuciDan); prikazi('lekovi'); return; }
-  ekranDana.iscrtaj(tekuciDan);
-  prikazi('dan');
+  if (!ekrani.lek.hidden) { naGlavni.lekovi(); return; }
+  naGlavni.dan();
 });
 
 /* Kad se aplikacija vrati u prvi plan posle ponoći, dan više nije isti. */

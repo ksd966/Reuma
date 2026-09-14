@@ -101,8 +101,11 @@ export function napraviCev(tacke, { segmenata = 24, zatvoriPocetak = true, zatvo
     const od = trouglovi.length;
     for (let k = 0; k < segmenata; k++) {
       const k2 = (k + 1) % segmenata;
-      trouglovi.push([[i, k], [i + 1, k], [i + 1, k2]]);
-      trouglovi.push([[i, k], [i + 1, k2], [i, k2]]);
+      /* Redosled temena mora da daje normalu koja gleda NAPOLJE. Obrnut
+         redosled okreće cev naopako: prednje strane se odseku, pa se kroz
+         telo vidi njegova unutrašnja strana. */
+      trouglovi.push([[i, k], [i + 1, k2], [i + 1, k]]);
+      trouglovi.push([[i, k], [i, k2], [i + 1, k2]]);
     }
     trake.push({ region: tacke[i].region ?? null, od, do: trouglovi.length });
   }

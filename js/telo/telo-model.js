@@ -99,10 +99,18 @@ const stopalo = (s, f) => [
 ];
 
 /** Kosina od vrata ka ramenu; pripada regionu ramena jer tu ljudi i pokazuju. */
+/* Presek je pljosnat — nizak a dubok — jer trapez leži preko ramena kao ploča.
+   Sa okruglim presekom se dizao iznad trupa i na ramenima su strčali klinovi. */
+/* Presek je pljosnat — nizak a dubok — jer trapez leži preko ramena kao ploča,
+   i dovoljno širok da pokrije sužavanje trupa ka vratu. Sa okruglim i uskim
+   presekom se dizao iznad trupa, pa su na ramenima strčali klinovi. */
 const trapez = (s, f) => [
-  { p: [0.000, 1.452, -0.032], ra: 0.044, region: `rame-${f}` },
-  { p: [s * 0.076, 1.452, -0.024], ra: 0.052, region: `rame-${f}` },
-  { p: [s * 0.150, 1.438, -0.008], ra: 0.058, region: `rame-${f}` }
+  /* Početak mora da stane UNUTAR vrata: kad je bio dublji od njega, ravna
+     kapica na kraju cevi virila je napolje kao klin na ramenu. */
+  { p: [0.000, 1.446, -0.004], ra: 0.030, rb: 0.046, region: `rame-${f}` },
+  { p: [s * 0.058, 1.442, -0.004], ra: 0.033, rb: 0.066, region: `rame-${f}` },
+  { p: [s * 0.112, 1.436, -0.005], ra: 0.032, rb: 0.065, region: `rame-${f}` },
+  { p: [s * 0.162, 1.429, -0.006], ra: 0.030, rb: 0.058, region: `rame-${f}` }
 ];
 
 const vrat = [
@@ -336,7 +344,8 @@ export function napraviTelo(THREE, boje) {
 
   /* ── ruke i noge ──────────────────────────────────────────────────── */
   for (const [s, f] of [[1, 'l'], [-1, 'd']]) {
-    dodajCev(trapez(s, f), { segmenata: 20 });
+    /* Bez kapice na početku — vrat je ionako pokriva. */
+    dodajCev(trapez(s, f), { segmenata: 20, zatvoriPocetak: false });
     dodajCev(ruka(s, f), { segmenata: 24 });
     dodajCev(saka(s, f), { segmenata: 22 });
     for (const prst of prstiSake(s, f)) dodajCev(prst, { segmenata: 12 });

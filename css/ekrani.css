@@ -423,3 +423,44 @@ input[type="time"].unos,input[type="date"].unos{
   color:var(--muted);font-size:13.5px;line-height:1.55;
   padding:16px;border:1px dashed var(--line);border-radius:var(--radius);
 }
+
+/* ── traka pri dnu ──────────────────────────────────────────────────────
+   Navigacija stoji dole, u dometu palca. Gornji desni ugao je na telefonu od
+   6 cola najteže dohvatljivo mesto, a upravo su tamo ranije bile ikonice. */
+.dno{
+  position:fixed;left:0;right:0;bottom:0;z-index:30;
+  display:grid;grid-template-columns:repeat(4,1fr);
+  background:var(--surface);
+  border-top:1px solid var(--line);
+  padding:0 var(--safe-right) var(--safe-bottom) var(--safe-left);
+}
+.dno button{
+  min-height:58px;padding:9px 2px 8px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  color:var(--dim);font-size:10.5px;letter-spacing:.01em;
+}
+.dno button svg{width:23px;height:23px;display:block}
+.dno button[aria-current="page"]{color:var(--text)}
+.dno button[aria-current="page"] svg{stroke:var(--accent)}
+.dno button[aria-current="page"] span{font-weight:600}
+
+/* Strana mora da se završi iznad trake, inače poslednji red ostane ispod nje. */
+body[data-dno="da"] .strana{padding-bottom:calc(78px + var(--safe-bottom))}
+
+/* ── radnje prikovane uz dno ekrana unosa ───────────────────────────────
+   Čuvanje je ranije bilo tek ispod celog spiska od 36 regiona, pa se do njega
+   stizalo tek dugim pomeranjem.
+
+   Koristi se `fixed`, ne `sticky`: dizajn-sistem traži `overflow-x:hidden` na
+   `html` i `body`, a to pravi sopstveni okvir pomeranja i kvari `sticky` — bio
+   je zalepljen, ali tek kad se do njega dođe. */
+.radnje--lepljive{
+  position:fixed;left:0;right:0;bottom:0;z-index:25;
+  padding:12px calc(var(--gutter) + var(--safe-right))
+          calc(12px + var(--safe-bottom)) calc(var(--gutter) + var(--safe-left));
+  background:var(--ground);
+  border-top:1px solid var(--line);
+}
+
+/* Strana se završava iznad prikovanih dugmadi. */
+#ekran-unos{padding-bottom:calc(92px + var(--safe-bottom))}

@@ -340,7 +340,6 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
 
     elLegendaOblik.hidden = !rezim().upalni;
     elObrisi.hidden = !unos;
-    mapa.osvezi();
     scrollTo(0, 0);
   }
 
@@ -384,6 +383,9 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
 
   return {
     otvori,
+    /* Zove se pošto je ekran prikazan: dok je bio sakriven, platno nije imalo
+       veličinu pa se telo ne bi iscrtalo. */
+    osveziMapu: () => mapa.osvezi(),
     zaglavlje: () => ({
       naslov: DELOVI.find(d => d.id === deo)?.ime ?? '',
       podnaslov: imeDana(kljuc) === 'danas' ? 'danas' : punDatum(kljuc)

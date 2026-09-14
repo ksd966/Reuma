@@ -20,9 +20,12 @@ export const POGLEDI = [
   { id: 'levi-bok',  ime: 'Levi bok',  ugao: -Math.PI / 2 }
 ];
 
+/* Telo mora jasno da se odvoji od podloge. Ranije je u tamnom režimu bilo
+   skoro crno na skoro crnoj podlozi, pa se na telefonu videlo samo kako sive
+   tačke lebde u praznom — kao da modela nema. */
 const BOJE = {
-  tamno:  { neutralno: '#2A2F35', region: '#414951' },
-  svetlo: { neutralno: '#C6CBD1', region: '#A9B0B8' }
+  tamno:  { neutralno: '#525C66', region: '#68737E' },
+  svetlo: { neutralno: '#C2C8CE', region: '#A4ACB5' }
 };
 
 /* Zglob koji je otečen a ne boli dobija svoju boju, izvan skale jačine bola —
@@ -37,6 +40,29 @@ const DOMET_TACKE = 44;     // px — krajnji domet ako ni telo nije pogođeno
 const POLUPRECNIK = { tacka: 7, broj: 15 };   // px, za razmicanje oznaka
 const TAU = Math.PI * 2;
 
+/**
+ * Zamena kad WebGL nije dostupan. Vraća isti oblik kao prava mapa, pa ostatak
+ * aplikacije ne mora da zna za razliku — samo se umesto tela pojavi poruka,
+ * a regioni se biraju iz spiska ispod.
+ */
+function bezCrtaca(platno, slojOznaka) {
+  platno.hidden = true;
+  const poruka = document.createElement('p');
+  poruka.className = 'mapa__bez-crtaca';
+  poruka.textContent =
+    'Trodimenzionalni prikaz tela nije dostupan na ovom uređaju. ' +
+    'Regione birajte iz spiska ispod — unos je potpuno isti.';
+  slojOznaka.replaceChildren(poruka);
+  slojOznaka.style.pointerEvents = 'auto';
+
+  const nista = () => {};
+  return {
+    naPogled: nista, postaviStanje: nista, ocistiSve: nista, izaberi: nista,
+    stanjeRegiona: () => undefined, svaStanja: () => new Map(),
+    osvezi: nista, dostupna: false
+  };
+}
+
 /** Najkraći put do ciljnog ugla, da se telo ne vrti naokolo bez potrebe. */
 function najkraciUgao(od, doUgla) {
   let d = (doUgla - od) % TAU;
@@ -49,17 +75,26 @@ export function napraviMapuTela({ platno, slojOznaka, naDodirRegiona, naPromenuP
   const tamnoUpit = matchMedia('(prefers-color-scheme: dark)');
   const boje = () => (tamnoUpit.matches ? BOJE.tamno : BOJE.svetlo);
 
-  const crtac = new THREE.WebGLRenderer({ canvas: platno, antialias: true, alpha: true });
+  let crtac;
+  try {
+    crtac = new THREE.WebGLRenderer({ canvas: platno, antialias: true, alpha: true });
+  } catch {
+    /* Bez WebGL-a aplikacija ostaje upotrebljiva: spisak regiona radi sve isto.
+       Prazno platno bi izgledalo kao da mape tela uopšte nema. */
+    return bezCrtaca(platno, slojOznaka);
+  }
   crtac.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
 
   const scena = new THREE.Scene();
   const kamera = new THREE.PerspectiveCamera(30, 1, 0.1, 40);
 
-  scena.add(new THREE.HemisphereLight(0xffffff, 0x6a7078, 1.5));
-  const glavno = new THREE.DirectionalLight(0xffffff, 2.0);
+  /* Osvetljenje je namerno ravno i bez jakih senki: zasenjena strana tela
+     inače potone u podlogu i region na njoj se ne razazna. */
+  scena.add(new THREE.HemisphereLight(0xffffff, 0x8b939b, 2.0));
+  const glavno = new THREE.DirectionalLight(0xffffff, 1.7);
   glavno.position.set(0.55, 1.1, 1.25);
   scena.add(glavno);
-  const dopuna = new THREE.DirectionalLight(0xffffff, 0.55);
+  const dopuna = new THREE.DirectionalLight(0xffffff, 0.9);
   dopuna.position.set(-0.9, 0.25, 0.7);
   scena.add(dopuna);
 
@@ -97,9 +132,18 @@ export function napraviMapuTela({ platno, slojOznaka, naDodirRegiona, naPromenuP
   }
 
   /* ── veličina ─────────────────────────────────────────────────────── */
+  let pokusaja = 0;
+
   function naVelicinu() {
     const { clientWidth: w, clientHeight: h } = platno;
-    if (!w || !h) return;
+    if (!w || !h) {
+      /* Platno je još sakriveno (display:none), pa nema veličinu. Ne sme se
+         oslanjati samo na ResizeObserver — na iOS Safariju ume da ne javi
+         prelazak iz sakrivenog u vidljivo, i telo onda nikad ne osvane. */
+      if (pokusaja < 90) { pokusaja++; requestAnimationFrame(naVelicinu); }
+      return;
+    }
+    pokusaja = 0;
     crtac.setSize(w, h, false);
     kamera.aspect = w / h;
     /* Kamera se odmakne taman toliko da telo stane po visini, sa malom ivicom. */
@@ -397,7 +441,8 @@ export function napraviMapuTela({ platno, slojOznaka, naDodirRegiona, naPromenuP
     },
     stanjeRegiona: (id) => stanje.get(id),
     svaStanja: () => new Map(stanje),
-    osvezi: naVelicinu
+    osvezi: naVelicinu,
+    dostupna: true
   };
 
   new ResizeObserver(naVelicinu).observe(platno);

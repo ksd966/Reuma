@@ -217,3 +217,11 @@
   margin-top:26px;padding-top:14px;border-top:1px solid var(--line);
   color:var(--dim);font-size:12px;line-height:1.5;
 }
+
+/* Poruka kad trodimenzionalni prikaz nije dostupan — prazno platno bi
+   izgledalo kao da mape tela uopšte nema. */
+.mapa__bez-crtaca{
+  position:absolute;inset:0;margin:auto;height:max-content;
+  padding:0 22px;text-align:center;
+  color:var(--muted);font-size:13.5px;line-height:1.55;
+}
