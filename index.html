@@ -49,6 +49,19 @@
   </svg>
   <span class="topbar__ime" id="naslov">Artron</span>
   <span class="topbar__desno" id="podnaslov"></span>
+  <button class="topbar__zupcanik" id="ka-podesavanjima" type="button" aria-label="Podešavanja">
+    <svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20" fill="none"
+         stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3.1"/>
+      <path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3
+               1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1
+               a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1
+               A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3
+               H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1
+               a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1
+               a1.6 1.6 0 0 0-1.5 1z"/>
+    </svg>
+  </button>
 </header>
 
 <main>
@@ -79,6 +92,7 @@
   <h2 class="naslov-odeljka">Tri unosa za ovaj dan</h2>
   <div class="delovi" id="delovi"></div>
   <div class="tok" id="tok" hidden></div>
+  <div class="zbir" id="zbir" hidden></div>
 
   <button class="dugme dugme--danas" id="na-danas" type="button" hidden>Nazad na danas</button>
 
@@ -120,6 +134,11 @@
       <div><i style="background:#EC835A"></i>7–8 jaka</div>
       <div><i style="background:#D03B3B"></i>9–10 vrlo jaka</div>
     </div>
+
+    <div class="legenda legenda--oblik" id="legenda-oblik" aria-hidden="true" hidden>
+      <div><i class="uzorak-krug"></i>krug — bol</div>
+      <div><i class="uzorak-kvadrat"></i>kvadrat — otečen zglob</div>
+    </div>
   </section>
 
   <section class="blok" id="dodatna"></section>
@@ -136,6 +155,24 @@
     <button class="dugme dugme--tiho" id="obrisi-unos" type="button" hidden>Obriši unos</button>
     <button class="dugme dugme--glavno" id="sacuvaj" type="button">Sačuvaj</button>
   </div>
+</section>
+
+<!-- ══ EKRAN: PODEŠAVANJA ══════════════════════════════════════════════ -->
+<section class="ekran strana" id="ekran-podesavanja" hidden aria-labelledby="n-pod">
+  <h1 class="samo-citac" id="n-pod">Podešavanja</h1>
+
+  <h2 class="naslov-odeljka">Režim praćenja</h2>
+  <p class="uputstvo-levo">
+    Režim menja samo šta se pita pri unosu — izgled aplikacije ostaje isti.
+    Može i oba istovremeno, i može nijedan.
+  </p>
+  <div id="rezimi"></div>
+
+  <p class="podnozje">
+    Artron je lični dnevnik, nije medicinski uređaj. Beleži ono što unesete —
+    ne postavlja dijagnozu, ne savetuje terapiju i ne primenjuje nikakve
+    zvanične kriterijume. Svi podaci ostaju na ovom telefonu.
+  </p>
 </section>
 
 </main>
@@ -158,6 +195,15 @@
 
   <h3 class="naslov-odeljka" style="margin:16px 0 8px">Kakav je bol</h3>
   <div class="vrste" id="vrste" role="group" aria-label="Vrsta bola"></div>
+
+  <div id="zglob-upalno" hidden>
+    <h3 class="naslov-odeljka" style="margin:18px 0 8px">Stanje zgloba</h3>
+    <div class="vrste" id="zglob-stanje" role="group" aria-label="Stanje zgloba">
+      <button type="button" data-znak="oteklo" aria-pressed="false">Otečen</button>
+      <button type="button" data-znak="toplo" aria-pressed="false">Topao</button>
+      <button type="button" data-znak="crveno" aria-pressed="false">Crven</button>
+    </div>
+  </div>
 
   <div class="radnje">
     <button class="dugme dugme--tiho" id="ukloni" type="button">Ukloni</button>

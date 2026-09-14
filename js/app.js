@@ -8,13 +8,16 @@
 
 import { napraviEkranDana } from './dan.js';
 import { napraviEkranUnosa } from './unos-dana.js';
+import { napraviEkranPodesavanja } from './podesavanja.js';
 import { kljucDana, pomeriDan, jeBuducnost, imeDana } from './skladiste.js';
 
 const ekrani = {
   dan: document.getElementById('ekran-dan'),
-  unos: document.getElementById('ekran-unos')
+  unos: document.getElementById('ekran-unos'),
+  podesavanja: document.getElementById('ekran-podesavanja')
 };
 const elNazad = document.getElementById('nazad');
+const elKaPodesavanjima = document.getElementById('ka-podesavanjima');
 const elZnak = document.getElementById('znak');
 const elNaslov = document.getElementById('naslov');
 const elPodnaslov = document.getElementById('podnaslov');
@@ -38,13 +41,18 @@ function javi(tekst) {
 /* ── ekrani ───────────────────────────────────────────────────────────── */
 function prikazi(ime) {
   for (const [id, el] of Object.entries(ekrani)) el.hidden = id !== ime;
-  const uUnosu = ime === 'unos';
-  elNazad.hidden = !uUnosu;
-  elZnak.hidden = uUnosu;
-  if (uUnosu) {
+  const naPocetku = ime === 'dan';
+  elNazad.hidden = naPocetku;
+  elZnak.hidden = !naPocetku;
+  elKaPodesavanjima.hidden = !naPocetku;
+
+  if (ime === 'unos') {
     const z = ekranUnosa.zaglavlje();
     elNaslov.textContent = z.naslov;
     elPodnaslov.textContent = z.podnaslov;
+  } else if (ime === 'podesavanja') {
+    elNaslov.textContent = 'Podešavanja';
+    elPodnaslov.textContent = '';
   } else {
     elNaslov.textContent = 'Artron';
     elPodnaslov.textContent = imeDana(tekuciDan);
@@ -74,6 +82,17 @@ const ekranUnosa = napraviEkranUnosa({
   naJavljanje: javi
 });
 
+const ekranPodesavanja = napraviEkranPodesavanja({
+  /* Promena režima menja šta se pita, pa se pregled dana mora ponovo iscrtati
+     — lični zbir i mera popunjenosti zavise od izabranog režima. */
+  naPromenuRezima: () => ekranDana.iscrtaj(tekuciDan)
+});
+
+elKaPodesavanjima.addEventListener('click', () => {
+  ekranPodesavanja.iscrtaj();
+  prikazi('podesavanja');
+});
+
 elNazad.addEventListener('click', () => {
   ekranDana.iscrtaj(tekuciDan);
   prikazi('dan');
@@ -93,7 +112,7 @@ ekranDana.iscrtaj(tekuciDan);
 prikazi('dan');
 
 /* Za proveru pri radu na modelu; aplikacija ovo ne koristi. */
-globalThis.artron = { ekranDana, ekranUnosa, prikazi };
+globalThis.artron = { ekranDana, ekranUnosa, ekranPodesavanja, prikazi };
 
 /* ── rad bez mreže ────────────────────────────────────────────────────── */
 if ('serviceWorker' in navigator) {

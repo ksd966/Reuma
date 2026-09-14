@@ -12,6 +12,11 @@
              white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .topbar__desno{margin-left:auto;color:var(--dim);font-size:12px;
                white-space:nowrap;flex:none;padding-left:10px}
+.topbar__zupcanik{
+  width:var(--meta);height:var(--meta);margin:-5px -10px -5px 0;flex:none;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--muted);border-radius:var(--radius-sm);
+}
 
 .strana{
   padding-left:calc(var(--gutter) + var(--safe-left));
@@ -51,6 +56,20 @@
   color:#14171A;
   box-shadow:0 0 0 2px var(--ground);
 }
+/* Otečen zglob se razlikuje OBLIKOM, ne samo bojom — kvadrat umesto kruga.
+   Tako se razaznaje i u crno-belom i kod daltonizma. */
+.tacka-regiona[data-oteklo="da"]{border-radius:7px}
+.tacka-regiona[data-oteklo="da"]:not([data-stanje="uneto"]){
+  width:13px;height:13px;opacity:.85;
+}
+
+/* Uzorci oblika za legendu. */
+.legenda--oblik{margin-top:9px}
+.uzorak-krug,.uzorak-kvadrat{
+  width:13px;height:13px;flex:none;background:var(--muted);
+}
+.uzorak-krug{border-radius:99px}
+.uzorak-kvadrat{border-radius:4px}
 
 .mapa__uputstvo{
   text-align:center;color:var(--dim);font-size:12.5px;margin-top:2px;
@@ -103,6 +122,8 @@
   font-variant-numeric:tabular-nums;
 }
 .spisak__dugme[data-oznacen="da"]{border-color:var(--line-strong);background:var(--surface-2)}
+/* Isto pravilo kao na telu: otečen zglob je kvadrat, bolan je krug. */
+.spisak__dugme b[data-oteklo="da"]{border-radius:6px}
 
 /* ── list odozdo ────────────────────────────────────────────────────── */
 .zastor{

@@ -9,9 +9,12 @@
 import { napraviMapuTela, POGLEDI } from './telo/mapa-tela.js';
 import { napraviList } from './unos.js';
 import { REGIONI, GRUPE, PO_ID, stepenZa } from './telo/regioni.js';
-import { POLJA } from './polja.js';
+
+/* Ista boja kao na mapi tela za zglob koji je otečen a ne boli. */
+const BOJA_OTEKLINE = '#5A6FD6';
+import { poljaZa } from './polja.js';
 import {
-  DELOVI, dohvatiUnos, upisiUnos, obrisiUnos, imeDana, punDatum, sadaHHMM
+  DELOVI, dohvatiUnos, upisiUnos, obrisiUnos, imeDana, punDatum, sadaHHMM, rezim
 } from './skladiste.js';
 
 export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
@@ -23,6 +26,7 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
   const elBolKlizac = document.getElementById('bol-klizac');
   const elSacuvaj = document.getElementById('sacuvaj');
   const elObrisi = document.getElementById('obrisi-unos');
+  const elLegendaOblik = document.getElementById('legenda-oblik');
 
   let kljuc = null, deo = null, dodatnaVrednost = {};
 
@@ -101,17 +105,26 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
     if (!b) return;
     const unos = mapa.stanjeRegiona(id);
     const znak = b.querySelector('b');
-    if (unos) {
-      b.dataset.oznacen = 'da';
-      znak.hidden = false;
-      znak.textContent = String(unos.jacina);
-      znak.style.background = stepenZa(unos.jacina).boja;
-      b.setAttribute('aria-label', `${PO_ID.get(id).ime} — bol ${unos.jacina} od 10`);
-    } else {
+    if (!unos) {
       delete b.dataset.oznacen;
+      delete znak.dataset.oteklo;
       znak.hidden = true;
       b.removeAttribute('aria-label');
+      return;
     }
+    const jacina = unos.jacina ?? 0;
+    b.dataset.oznacen = 'da';
+    znak.hidden = false;
+    znak.textContent = jacina > 0 ? String(jacina) : '';
+    znak.style.background = jacina > 0 ? stepenZa(jacina).boja : BOJA_OTEKLINE;
+    if (unos.oteklo) znak.dataset.oteklo = 'da'; else delete znak.dataset.oteklo;
+
+    const delovi = [PO_ID.get(id).ime];
+    delovi.push(jacina > 0 ? `bol ${jacina} od 10` : 'bez bola');
+    if (unos.oteklo) delovi.push('otečen');
+    if (unos.toplo) delovi.push('topao');
+    if (unos.crveno) delovi.push('crven');
+    b.setAttribute('aria-label', delovi.join(' — '));
   }
 
   /* ── ukupna jačina ──────────────────────────────────────────────────── */
@@ -132,7 +145,7 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
   /* ── pitanja uz deo dana ────────────────────────────────────────────── */
   function iscrtajDodatna() {
     elDodatna.replaceChildren();
-    const polja = POLJA[deo] ?? [];
+    const polja = poljaZa(deo, rezim());
     if (!polja.length) return;
 
     const naslov = document.createElement('h2');
@@ -140,9 +153,67 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
     naslov.textContent = DELOVI.find(d => d.id === deo).opis;
     elDodatna.appendChild(naslov);
 
+    const crtaci = {
+      izbor: poljeIzbor,
+      klizac: poljeKlizac,
+      prekidac: poljePrekidac,
+      viseizbor: poljeViseizbor
+    };
     for (const polje of polja) {
-      elDodatna.appendChild(polje.vrsta === 'izbor' ? poljeIzbor(polje) : poljeKlizac(polje));
+      elDodatna.appendChild((crtaci[polje.vrsta] ?? poljeKlizac)(polje));
     }
+  }
+
+  /** Da/ne, sa trećim mogućim stanjem — neodgovoreno. */
+  function poljePrekidac(polje) {
+    const okvir = zaglavljePolja(polje);
+    const red = document.createElement('div');
+    red.className = 'izbori';
+    red.setAttribute('role', 'group');
+    red.setAttribute('aria-labelledby', `polje-${polje.id}`);
+
+    for (const o of [{ v: true, ime: 'Da' }, { v: false, ime: 'Ne' }]) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = o.ime;
+      b.dataset.vrednost = String(o.v);
+      b.setAttribute('aria-pressed', String(dodatnaVrednost[polje.id] === o.v));
+      b.addEventListener('click', () => {
+        dodatnaVrednost[polje.id] = dodatnaVrednost[polje.id] === o.v ? undefined : o.v;
+        for (const d of red.children) {
+          d.setAttribute('aria-pressed', String((d.dataset.vrednost === 'true') === dodatnaVrednost[polje.id]));
+        }
+      });
+      red.appendChild(b);
+    }
+    okvir.appendChild(red);
+    return okvir;
+  }
+
+  /** Više odgovora odjednom; vrednost je spisak izabranog. */
+  function poljeViseizbor(polje) {
+    const okvir = zaglavljePolja(polje);
+    const red = document.createElement('div');
+    red.className = 'izbori';
+    red.setAttribute('role', 'group');
+    red.setAttribute('aria-labelledby', `polje-${polje.id}`);
+    dodatnaVrednost[polje.id] ??= [];
+
+    for (const o of polje.opcije) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = o.ime;
+      b.setAttribute('aria-pressed', String(dodatnaVrednost[polje.id].includes(o.v)));
+      b.addEventListener('click', () => {
+        const spisak = dodatnaVrednost[polje.id];
+        const i = spisak.indexOf(o.v);
+        if (i >= 0) spisak.splice(i, 1); else spisak.push(o.v);
+        b.setAttribute('aria-pressed', String(i < 0));
+      });
+      red.appendChild(b);
+    }
+    okvir.appendChild(red);
+    return okvir;
   }
 
   function zaglavljePolja(polje) {
@@ -214,13 +285,26 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
     skala.setAttribute('aria-hidden', 'true');
     skala.innerHTML = `<span>${polje.min}</span><span>${Math.round((polje.min + polje.max) / 2)}</span><span>${polje.max}</span>`;
 
+    /* Klizač koji korisnik nije dodirnuo NIJE odgovor. Da se vrednost upisuje
+       već pri iscrtavanju, svaki unos bi nosio umor 0 i magla 0, pa bi prosek
+       bio izmišljen podatak. Zato se dok se ne dodirne prikazuje crtica. */
     const osvezi = () => {
-      const v = Number(klizac.value);
-      dodatnaVrednost[polje.id] = v;
+      const v = dodatnaVrednost[polje.id];
+      if (v == null) {
+        broj.textContent = '—';
+        broj.style.color = 'var(--dim)';
+        rec.textContent = 'nije uneseno';
+        return;
+      }
       broj.textContent = String(v);
-      rec.textContent = v === 0 ? 'nimalo' : v <= 3 ? 'malo' : v <= 6 ? 'osrednje' : v <= 8 ? 'mnogo' : 'vrlo mnogo';
+      broj.style.color = '';
+      rec.textContent = v === 0 ? 'nimalo' : v <= 3 ? 'malo' : v <= 6 ? 'osrednje'
+                      : v <= 8 ? 'mnogo' : 'vrlo mnogo';
     };
-    klizac.addEventListener('input', osvezi);
+    klizac.addEventListener('input', () => {
+      dodatnaVrednost[polje.id] = Number(klizac.value);
+      osvezi();
+    });
     osvezi();
 
     okvir.append(prikaz, klizac, skala);
@@ -245,11 +329,15 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
     }
 
     dodatnaVrednost = {};
-    for (const polje of POLJA[deo] ?? []) {
-      if (unos?.[polje.id] != null) dodatnaVrednost[polje.id] = unos[polje.id];
+    for (const polje of poljaZa(deo, rezim())) {
+      if (unos?.[polje.id] != null) {
+        dodatnaVrednost[polje.id] = Array.isArray(unos[polje.id])
+          ? [...unos[polje.id]] : unos[polje.id];
+      }
     }
     iscrtajDodatna();
 
+    elLegendaOblik.hidden = !rezim().upalni;
     elObrisi.hidden = !unos;
     mapa.osvezi();
     scrollTo(0, 0);
@@ -260,8 +348,11 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
     for (const [id, r] of mapa.svaStanja()) regioni[id] = r;
 
     const unos = { bol: Number(elBolKlizac.value), vreme: sadaHHMM(), regioni };
-    for (const polje of POLJA[deo] ?? []) {
-      if (dodatnaVrednost[polje.id] != null) unos[polje.id] = dodatnaVrednost[polje.id];
+    for (const polje of poljaZa(deo, rezim())) {
+      const v = dodatnaVrednost[polje.id];
+      if (v == null) continue;
+      if (Array.isArray(v) && v.length === 0) continue;   // prazan spisak nije odgovor
+      unos[polje.id] = v;
     }
 
     const ime = DELOVI.find(d => d.id === deo).ime.toLowerCase();

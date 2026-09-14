@@ -6,6 +6,7 @@
  */
 
 import { VRSTE_BOLA, stepenZa } from './telo/regioni.js';
+import { rezim } from './skladiste.js';
 
 export function napraviList({ naPotvrdu, naUklanjanje, naZatvaranje }) {
   const list = document.getElementById('list');
@@ -18,10 +19,31 @@ export function napraviList({ naPotvrdu, naUklanjanje, naZatvaranje }) {
   const elVrste = document.getElementById('vrste');
   const dUkloni = document.getElementById('ukloni');
   const dPotvrdi = document.getElementById('potvrdi');
+  const elUpalno = document.getElementById('zglob-upalno');
+  const elStanje = document.getElementById('zglob-stanje');
 
   let tekuci = null;
   let vrsta = VRSTE_BOLA[0].id;
+  let znaci = {};                 // oteklo / toplo / crveno, samo u upalnom režimu
   let vracaFokusNa = null;
+
+  /* Otečen zglob se beleži zasebno od bolnog — zglob ume da bude otečen a da
+     ne boli, i obrnuto. Zato ovi prekidači ne zavise od jačine bola. */
+  for (const b of elStanje.children) {
+    b.addEventListener('click', () => {
+      znaci[b.dataset.znak] = !znaci[b.dataset.znak];
+      osveziZnake();
+      osveziJacinu();
+    });
+  }
+
+  function osveziZnake() {
+    for (const b of elStanje.children) {
+      b.setAttribute('aria-pressed', String(!!znaci[b.dataset.znak]));
+    }
+  }
+
+  const imaZnak = () => Object.values(znaci).some(Boolean);
 
   for (const v of VRSTE_BOLA) {
     const b = document.createElement('button');
@@ -43,9 +65,11 @@ export function napraviList({ naPotvrdu, naUklanjanje, naZatvaranje }) {
     const j = Number(klizac.value);
     elBroj.textContent = String(j);
     if (j === 0) {
-      elRec.textContent = 'bez bola';
+      elRec.textContent = imaZnak() ? 'bez bola, ali označen' : 'bez bola';
       elBroj.style.color = 'var(--dim)';
-      dPotvrdi.textContent = tekuci?.postojeci ? 'Ukloni oznaku' : 'Potvrdi';
+      /* Nula bez ijednog znaka znači da region više ništa ne nosi — potvrda
+         ga tada uklanja, umesto da ostavi prazan zapis. */
+      dPotvrdi.textContent = (!imaZnak() && tekuci?.postojeci) ? 'Ukloni oznaku' : 'Potvrdi';
     } else {
       const s = stepenZa(j);
       elRec.textContent = s.ime;
@@ -66,7 +90,14 @@ export function napraviList({ naPotvrdu, naUklanjanje, naZatvaranje }) {
     vrsta = postojeci?.vrsta ?? VRSTE_BOLA[0].id;
     dUkloni.hidden = !postojeci;
 
+    const upalni = !!rezim().upalni;
+    elUpalno.hidden = !upalni;
+    znaci = upalni
+      ? { oteklo: !!postojeci?.oteklo, toplo: !!postojeci?.toplo, crveno: !!postojeci?.crveno }
+      : {};
+
     osveziVrste();
+    osveziZnake();
     osveziJacinu();
 
     list.hidden = false;
@@ -92,8 +123,13 @@ export function napraviList({ naPotvrdu, naUklanjanje, naZatvaranje }) {
   dPotvrdi.addEventListener('click', () => {
     if (!tekuci) return;
     const j = Number(klizac.value);
-    if (j === 0) naUklanjanje?.(tekuci.id);
-    else naPotvrdu?.(tekuci.id, { jacina: j, vrsta });
+    if (j === 0 && !imaZnak()) {
+      naUklanjanje?.(tekuci.id);
+    } else {
+      const unos = { jacina: j, vrsta };
+      for (const [k, v] of Object.entries(znaci)) if (v) unos[k] = true;
+      naPotvrdu?.(tekuci.id, unos);
+    }
     zatvori();
   });
 

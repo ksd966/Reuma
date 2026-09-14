@@ -7,6 +7,8 @@
  * localStorage direktno, nego samo funkcije odavde.
  */
 
+import { poljaZa } from './polja.js';
+
 const KLJUC = 'artron.v1';
 const VERZIJA = 1;
 
@@ -16,7 +18,13 @@ export const DELOVI = [
   { id: 'vece',  ime: 'Veče',  opis: 'Kraj dana' }
 ];
 
-const prazno = () => ({ verzija: VERZIJA, podesavanja: { rezim: { upalni: true, fibro: false } }, dani: {} });
+const PODRAZUMEVANI_REZIM = { upalni: false, fibro: false };
+
+const prazno = () => ({
+  verzija: VERZIJA,
+  podesavanja: { rezim: { ...PODRAZUMEVANI_REZIM } },
+  dani: {}
+});
 
 let podaci = null;
 
@@ -30,6 +38,8 @@ function ucitaj() {
   }
   if (!podaci || podaci.verzija !== VERZIJA) podaci = prazno();
   podaci.dani ||= {};
+  podaci.podesavanja ||= {};
+  podaci.podesavanja.rezim = { ...PODRAZUMEVANI_REZIM, ...podaci.podesavanja.rezim };
   return podaci;
 }
 
@@ -116,6 +126,13 @@ export function podesavanja() {
   return ucitaj().podesavanja;
 }
 
+export const rezim = () => ucitaj().podesavanja.rezim;
+
+export function postaviRezim(noviRezim) {
+  ucitaj().podesavanja.rezim = { ...PODRAZUMEVANI_REZIM, ...noviRezim };
+  return upisi();
+}
+
 /* ── izvedene mere ────────────────────────────────────────────────────── */
 
 /**
@@ -123,23 +140,62 @@ export function podesavanja() {
  * oblik nosi značenje a boja ga samo pojačava.
  *  1 — samo jačina bola
  *  2 — uz to i označen bar jedan region
- *  3 — uz to i popunjena polja tog dela dana
+ *  3 — uz to i sva pitanja tog dela dana
  */
-export function popunjenost(deo, unos) {
+export function popunjenost(deo, unos, rezimSad = rezim()) {
   if (!unos) return 0;
   let stepen = 1;
   if (Object.keys(unos.regioni ?? {}).length > 0) stepen = 2;
-  if (dodatnaPopunjena(deo, unos)) stepen = 3;
+  const polja = poljaZa(deo, rezimSad);
+  if (polja.length && polja.every(p => unos[p.id] != null)) stepen = 3;
   return stepen;
 }
 
-function dodatnaPopunjena(deo, u) {
-  if (deo === 'jutro') return u.ukocenost != null && u.san != null;
-  if (deo === 'podne') return u.opterecenje != null && u.umor != null;
-  return u.umor != null && u.kvalitetDana != null;
-}
-
 export const brojRegiona = (unos) => Object.keys(unos?.regioni ?? {}).length;
+
+/** Regioni sa zabeleženim bolom, odvojeno od onih samo otečenih. */
+export const brojBolnih = (unos) =>
+  Object.values(unos?.regioni ?? {}).filter(r => (r.jacina ?? 0) > 0).length;
+
+export const brojOteklih = (unos) =>
+  Object.values(unos?.regioni ?? {}).filter(r => r.oteklo).length;
+
+/**
+ * Lični zbir za praćenje kroz vreme.
+ *
+ * Namerno se ne zove skorom i ne primenjuje nikakve zvanične kriterijume —
+ * to su brojevi koje je korisnik sam uneo, sabrani da bi mogao da uporedi
+ * jedan dan sa drugim. Tumačenje je na lekaru.
+ */
+export function zbirDana(kljuc, rezimSad = rezim()) {
+  const dan = dohvatiDan(kljuc);
+  const unosi = DELOVI.map(d => dan[d.id]).filter(Boolean);
+  if (!unosi.length) return null;
+
+  const svi = new Set();
+  const otekli = new Set();
+  for (const u of unosi) {
+    for (const [id, r] of Object.entries(u.regioni ?? {})) {
+      if ((r.jacina ?? 0) > 0) svi.add(id);
+      if (r.oteklo) otekli.add(id);
+    }
+  }
+
+  const prosek = (polje) => {
+    const v = unosi.map(u => u[polje]).filter(x => x != null);
+    return v.length ? Math.round((v.reduce((a, b) => a + b, 0) / v.length) * 10) / 10 : null;
+  };
+
+  return {
+    bolnihPodrucja: svi.size,
+    oteklihZglobova: otekli.size,
+    prosekBola: prosek('bol'),
+    prosekUmora: rezimSad.fibro ? prosek('umor') : null,
+    prosekMagle: rezimSad.fibro ? prosek('magla') : null,
+    ukocenost: dan.jutro?.ukocenost ?? null,
+    brojUnosa: unosi.length
+  };
+}
 
 /** Najjači zabeležen region — ono što se prvo pita kod lekara. */
 export function najjaciRegion(unos) {

@@ -25,6 +25,10 @@ const BOJE = {
   svetlo: { neutralno: '#C6CBD1', region: '#A9B0B8' }
 };
 
+/* Zglob koji je otečen a ne boli dobija svoju boju, izvan skale jačine bola —
+   da se ne pomeša sa blagim bolom. Oblik tačke ga ionako razlikuje. */
+const BOJA_OTEKLINE = '#5A6FD6';
+
 const PRAG_DODIRA = 10;     // px pomeraja preko kojih dodir postaje okretanje
 const PRAG_OKRENUTOSTI = 0.12;  // koliko tačka mora da gleda ka nama da bi se videla
 const ZAZOR = 0.02;             // m — da tačka ne zakloni samu sebe pri proveri
@@ -110,7 +114,7 @@ export function napraviMapuTela({ platno, slojOznaka, naDodirRegiona, naPromenuP
   function obojiRegion(id) {
     const mat = telo.materijali.get(id);
     const unos = stanje.get(id);
-    mat.color.set(unos ? stepenZa(unos.jacina).boja : boje().region);
+    mat.color.set(bojaStanja(unos) ?? boje().region);
     mat.emissive.set(id === izabran ? '#E0A64B' : '#000000');
     mat.emissiveIntensity = id === izabran ? 0.42 : 0;
   }
@@ -140,15 +144,20 @@ export function napraviMapuTela({ platno, slojOznaka, naDodirRegiona, naPromenuP
 
       /* Izgled se postavlja pre provere vidljivosti: sakriven region kasnije
          izranja pri okretanju i mora odmah da bude tačan. */
-      if (unos) {
-        el.textContent = String(unos.jacina);
+      const boja = bojaStanja(unos);
+      if (boja) {
+        /* Broj stoji samo kad bol postoji; otečen a bezbolan zglob nosi
+           prazan kvadrat, jer bi „0" tu čitala kao izmerena vrednost. */
+        el.textContent = (unos.jacina ?? 0) > 0 ? String(unos.jacina) : '';
         el.dataset.stanje = 'uneto';
-        el.style.background = stepenZa(unos.jacina).boja;
+        el.style.background = boja;
       } else {
         el.textContent = '';
         delete el.dataset.stanje;
         el.style.background = '';
       }
+      /* Oteklina se razlikuje oblikom, ne samo bojom — kvadrat umesto kruga. */
+      if (unos?.oteklo) el.dataset.oteklo = 'da'; else delete el.dataset.oteklo;
 
       const izabrana = najboljaTacka(id, kosinus, sinus);
       const zapis = naEkranu.get(id);
@@ -161,7 +170,7 @@ export function napraviMapuTela({ platno, slojOznaka, naDodirRegiona, naPromenuP
         el, zapis,
         x: ((tacka.x + 1) / 2) * w,
         y: ((1 - tacka.y) / 2) * h,
-        r: unos ? POLUPRECNIK.broj : POLUPRECNIK.tacka
+        r: boja ? POLUPRECNIK.broj : POLUPRECNIK.tacka
       });
     }
 
@@ -172,6 +181,14 @@ export function napraviMapuTela({ platno, slojOznaka, naDodirRegiona, naPromenuP
       s.zapis.x = s.x;
       s.zapis.y = s.y;
     }
+  }
+
+  /** Boja regiona po onome što je zabeleženo; null kad ništa nije. */
+  function bojaStanja(unos) {
+    if (!unos) return null;
+    if ((unos.jacina ?? 0) > 0) return stepenZa(unos.jacina).boja;
+    if (unos.oteklo) return BOJA_OTEKLINE;
+    return null;
   }
 
   const radnaP = new THREE.Vector3();

@@ -21,13 +21,31 @@ medicinski uređaj.
   naknadno, za raniji deo dana ili za prethodne dane.
 - **Tok dana** — sva tri unosa jedan pored drugog i grafik koji pokazuje da li
   je gore ujutru ili uveče.
+- **Dva režima** — upalni reumatizam i fibromijalgija, može i oba istovremeno.
+  Režim menja samo šta se pita pri unosu, ne izgled aplikacije.
 - Ljuska po dizajn-sistemu, manifest, ikonice, splash i service worker.
+
+### Režimi
+
+**Upalni reumatizam** dodaje uz svaki zglob na mapi tela oteklinu, toplinu i
+crvenilo. Otečen zglob se beleži zasebno od bolnog, jer zglob ume da bude
+otečen a da ne boli, i obrnuto. Na mapi se razlikuje **oblikom, ne bojom** —
+kvadrat umesto kruga — pa se razaznaje i u crno-belom i kod daltonizma.
+
+**Fibromijalgija** dodaje umor zasebno (jer ume da bude teži od samog bola),
+neosvežavajući san, maglu u glavi, osetljivost na dodir, buku i svetlo, te
+glavobolju i probleme sa varenjem.
+
+Kad je bar jedan režim uključen, pregled dana pokazuje **lični zbir za
+praćenje**: broj bolnih područja, broj otečenih zglobova, prosek umora i magle.
+To su brojevi koje je korisnik sam uneo, sabrani da bi mogao da uporedi jedan
+dan sa drugim. Nije dijagnostički skor i ne primenjuje nikakve zvanične
+kriterijume — tumačenje je na lekaru.
 
 ## Šta tek dolazi
 
-Režimi za upalni reumatizam i fibromijalgiju, lekovi i biološka terapija sa
-odbrojavanjem, dnevnik po danima, vremenski okidači preko Open-Meteo, i izvoz
-u CSV i JSON.
+Lekovi i biološka terapija sa odbrojavanjem, dnevnik po danima, vremenski
+okidači preko Open-Meteo, i izvoz u CSV i JSON.
 
 ## Kako radi model tela
 
@@ -80,7 +98,8 @@ css/komponente.css      kartica, list odozdo, klizač, spisak, legenda
 css/ekrani.css          pregled dana i unos
 js/app.js               pokretanje i prelaz između ekrana
 js/skladiste.js         localStorage, datumi, izvedene mere
-js/polja.js             šta se pita uz koji deo dana
+js/polja.js             šta se pita uz koji deo dana, po režimu
+js/podesavanja.js       izbor režima praćenja
 js/dan.js               tri polja za dan i tok dana
 js/unos-dana.js         unos za jedan deo dana
 js/unos.js              list odozdo za unos bola u jednom regionu

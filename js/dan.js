@@ -8,9 +8,9 @@
 
 import {
   DELOVI, dohvatiDan, imeDana, punDatum, jeDanas, jeBuducnost,
-  popunjenost, brojRegiona
+  popunjenost, brojRegiona, rezim, zbirDana
 } from './skladiste.js';
-import { POLJA, ispisi } from './polja.js';
+import { poljaZa, ispisi } from './polja.js';
 import { stepenZa } from './telo/regioni.js';
 
 export function napraviEkranDana({ naIzborDela, naPromenuDana }) {
@@ -20,6 +20,7 @@ export function napraviEkranDana({ naIzborDela, naPromenuDana }) {
   const elNapred = document.getElementById('dan-napred');
   const elDelovi = document.getElementById('delovi');
   const elTok = document.getElementById('tok');
+  const elZbir = document.getElementById('zbir');
   const elNaDanas = document.getElementById('na-danas');
 
   let kljuc = null;
@@ -39,6 +40,7 @@ export function napraviEkranDana({ naIzborDela, naPromenuDana }) {
 
     elDelovi.replaceChildren(...DELOVI.map(d => karticaDela(d, dan[d.id])));
     iscrtajTok(dan);
+    iscrtajZbir();
   }
 
   const nextKljuc = (k) => {
@@ -87,7 +89,7 @@ export function napraviEkranDana({ naIzborDela, naPromenuDana }) {
       regioni.className = 'deo__regioni';
       regioni.textContent = n === 0 ? 'bez regiona' : n === 1 ? '1 region' : `${n} regiona`;
       dno.appendChild(regioni);
-      dno.appendChild(meraPopunjenosti(popunjenost(deo.id, unos)));
+      dno.appendChild(meraPopunjenosti(popunjenost(deo.id, unos, rezim())));
     } else {
       const dodaj = document.createElement('p');
       dodaj.className = 'deo__regioni';
@@ -173,10 +175,55 @@ export function napraviEkranDana({ naIzborDela, naPromenuDana }) {
    */
   function redDetalja(ima) {
     const redovi = ima.map(t => {
-      const stavke = (POLJA[t.deo] ?? []).map(p => ispisi(p.id, t.unos[p.id])).filter(Boolean);
+      const stavke = poljaZa(t.deo, rezim()).map(p => ispisi(p.id, t.unos[p.id])).filter(Boolean);
       return stavke.length ? `<b>${t.ime}</b> ${stavke.join(', ')}` : null;
     }).filter(Boolean);
     return redovi.length ? `<p class="tok__detalji">${redovi.join('<span> · </span>')}</p>` : '';
+  }
+
+  /**
+   * Lični zbir za praćenje.
+   *
+   * Namerno se ne zove skorom: to su brojevi koje je korisnik sam uneo,
+   * sabrani da bi mogao da uporedi jedan dan sa drugim. Aplikacija ne
+   * primenjuje nikakve zvanične kriterijume i ne tumači ove brojeve.
+   */
+  function iscrtajZbir() {
+    const r = rezim();
+    const z = zbirDana(kljuc, r);
+    if (!z || (!r.upalni && !r.fibro)) { elZbir.hidden = true; return; }
+
+    const broj = (x) => String(x).replace('.', ',');
+    const stavke = [];
+
+    /* Bolna mesta se broje jednom, ma koliko režima bilo uključeno — kod
+       upalnog se zovu zglobovima, kod fibromijalgije područjima. */
+    stavke.push([r.upalni && !r.fibro ? 'Bolnih zglobova' : 'Bolnih područja', z.bolnihPodrucja]);
+    if (r.upalni) {
+      stavke.push(['Otečenih zglobova', z.oteklihZglobova]);
+      if (z.ukocenost != null) {
+        stavke.push(['Jutarnja ukočenost', z.ukocenost === 0 ? 'nema' : `${z.ukocenost} min`]);
+      }
+    }
+    if (r.fibro) {
+      if (z.prosekUmora != null) stavke.push(['Prosek umora', `${broj(z.prosekUmora)}/10`]);
+      if (z.prosekMagle != null) stavke.push(['Prosek magle', `${broj(z.prosekMagle)}/10`]);
+    }
+    if (z.prosekBola != null) stavke.push(['Prosek bola', `${broj(z.prosekBola)}/10`]);
+    if (!stavke.length) { elZbir.hidden = true; return; }
+
+    elZbir.hidden = false;
+    elZbir.innerHTML = `
+      <p class="zbir__naslov">Lični zbir za praćenje</p>
+      <dl class="zbir__stavke">
+        ${stavke.map(([ime, v]) => `
+          <div><dt>${ime}</dt><dd class="tabular">${v}</dd></div>`).join('')}
+      </dl>
+      <p class="zbir__ograda">
+        Vaši brojevi, sabrani da biste mogli da uporedite jedan dan sa drugim.
+        Nije dijagnostički skor i ne primenjuje nikakve zvanične kriterijume —
+        tumačenje je na lekaru.
+      </p>`;
   }
 
   return { iscrtaj, tekuciDan: () => kljuc };
