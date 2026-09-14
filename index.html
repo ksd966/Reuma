@@ -117,9 +117,15 @@
       <span class="jacina__rec" id="bol-rec">bez bola</span>
     </div>
     <div id="bol-skala"></div>
-    <button class="dugme dugme--bez-bola dugme--usko" id="unos-bez-bola" type="button">
-      Ništa me ne boli — sačuvaj
-    </button>
+    <div class="brze-radnje">
+      <button class="dugme dugme--brza" id="unos-bez-bola" type="button">
+        Ništa me ne boli
+      </button>
+      <button class="dugme dugme--brza" id="prepisi" type="button" hidden>
+        <span id="prepisi-ime">Kao poslednji put</span>
+        <span class="dugme--brza__pod" id="prepisi-pod"></span>
+      </button>
+    </div>
   </section>
 
   <section class="blok" aria-labelledby="n-mapa">
@@ -149,11 +155,17 @@
   <section class="blok" id="dodatna"></section>
 
   <section class="blok" aria-labelledby="n-spisak">
-    <h2 class="naslov-odeljka" id="n-spisak">Svi regioni — spisak</h2>
-    <p class="uputstvo-levo">
-      Isti unos bez okretanja modela. Ovaj spisak čita i čitač ekrana.
-    </p>
-    <div class="spisak" id="spisak"></div>
+    <h2 class="samo-citac" id="n-spisak">Svi regioni — spisak</h2>
+    <button class="sklopivo" id="spisak-prekidac" type="button"
+            aria-expanded="false" aria-controls="spisak">
+      <span class="sklopivo__ime">Svi regioni — spisak</span>
+      <span class="sklopivo__pod">Isti unos bez okretanja modela; ovuda ide i čitač ekrana</span>
+      <svg class="sklopivo__strelica" viewBox="0 0 24 24" aria-hidden="true" width="20" height="20"
+           fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 9 L12 16 L19 9"/>
+      </svg>
+    </button>
+    <div class="spisak" id="spisak" hidden></div>
   </section>
 
   <div class="radnje radnje--lepljive">
@@ -314,14 +326,7 @@
   <p class="list__ime" id="list-ime">Region</p>
   <p class="list__pod" id="list-pod">Jačina bola i kakav je</p>
 
-  <div class="jacina">
-    <span class="jacina__broj tabular" id="jacina-broj">5</span>
-    <span class="jacina__rec" id="jacina-rec">umerena</span>
-  </div>
-
-  <div id="jacina-skala"></div>
-
-  <h3 class="naslov-odeljka" style="margin:18px 0 8px">Kakav je bol</h3>
+  <h3 class="naslov-odeljka" style="margin:16px 0 8px">Kakav je bol</h3>
   <div class="vrste" id="vrste" role="group" aria-label="Vrsta bola"></div>
 
   <div id="zglob-upalno" hidden>
@@ -333,9 +338,17 @@
     </div>
   </div>
 
+  <h3 class="naslov-odeljka" style="margin:18px 0 2px">Koliko jako</h3>
+  <p class="list__pod" id="list-savet">Dodir na broj čuva i zatvara.</p>
+  <div class="jacina">
+    <span class="jacina__broj tabular" id="jacina-broj">5</span>
+    <span class="jacina__rec" id="jacina-rec">umerena</span>
+  </div>
+  <div id="jacina-skala"></div>
+
   <div class="radnje">
     <button class="dugme dugme--tiho" id="ukloni" type="button">Ukloni</button>
-    <button class="dugme dugme--glavno" id="potvrdi" type="button">Potvrdi</button>
+    <button class="dugme dugme--tiho" id="zatvori-list" type="button">Zatvori</button>
   </div>
 </div>
 

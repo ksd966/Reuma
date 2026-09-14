@@ -15,7 +15,8 @@ const BOJA_OTEKLINE = '#5A6FD6';
 import { poljaZa } from './polja.js';
 import { napraviSkalu, recZaJacinu, recZaMeru } from './skala.js';
 import {
-  DELOVI, dohvatiUnos, upisiUnos, obrisiUnos, imeDana, punDatum, sadaHHMM, rezim
+  DELOVI, dohvatiUnos, upisiUnos, obrisiUnos, imeDana, punDatum, sadaHHMM, rezim,
+  poslednjiUnos
 } from './skladiste.js';
 
 export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
@@ -29,8 +30,21 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
   const elObrisi = document.getElementById('obrisi-unos');
   const elLegendaOblik = document.getElementById('legenda-oblik');
   const elBezBola = document.getElementById('unos-bez-bola');
+  const elPrepisi = document.getElementById('prepisi');
+  const elPrepisiIme = document.getElementById('prepisi-ime');
+  const elPrepisiPod = document.getElementById('prepisi-pod');
+  const elSpisakPrekidac = document.getElementById('spisak-prekidac');
+
+  /* Spisak od 36 regiona je sklopljen: razvučen, gurao je dugme za čuvanje i
+     ostatak pitanja daleko nadole. */
+  elSpisakPrekidac.addEventListener('click', () => {
+    const otvoren = elSpisakPrekidac.getAttribute('aria-expanded') === 'true';
+    elSpisakPrekidac.setAttribute('aria-expanded', String(!otvoren));
+    elSpisak.hidden = otvoren;
+  });
 
   let kljuc = null, deo = null, dodatnaVrednost = {};
+  let bolRucno = false;          // da li je korisnik sam dirao ukupnu jačinu
 
   /* ── spisak regiona ─────────────────────────────────────────────────── */
   const dugmadRegiona = new Map();
@@ -90,9 +104,26 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
   });
 
   const list = napraviList({
-    naPotvrdu: (id, u) => { mapa.postaviStanje(id, u); osveziRegion(id); },
-    naUklanjanje: (id) => { mapa.postaviStanje(id, null); osveziRegion(id); },
+    naPotvrdu: (id, u) => { mapa.postaviStanje(id, u); osveziRegion(id); izvediBol(); },
+    naUklanjanje: (id) => { mapa.postaviStanje(id, null); osveziRegion(id); izvediBol(); },
     naZatvaranje: () => mapa.izaberi(null)
+  });
+
+  /* Kod hroničnog bola ista mesta bole iz dana u dan — prepisivanje poslednjeg
+     unosa štedi najviše koraka, ostane samo da se popravi jačina. */
+  elPrepisi.addEventListener('click', () => {
+    const p = poslednjiUnos(deo, kljuc);
+    if (!p) return;
+    mapa.ocistiSve();
+    for (const r of REGIONI) osveziRegion(r.id);
+    for (const [id, r] of Object.entries(p.unos.regioni ?? {})) {
+      if (!PO_ID.has(id)) continue;
+      mapa.postaviStanje(id, { ...r });
+      osveziRegion(id);
+    }
+    bolRucno = false;
+    izvediBol();
+    naJavljanje?.(`Prepisano sa ${punDatum(p.kljuc)}`);
   });
 
   function otvoriRegion(id, poreklo) {
@@ -132,8 +163,20 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
   /* ── ukupna jačina ──────────────────────────────────────────────────── */
   const bolSkala = napraviSkalu(elBolSkala, {
     oznaka: 'Ukupna jačina bola od 0 do 10',
-    naIzbor: osveziBol
+    naIzbor: () => { bolRucno = true; osveziBol(); }
   });
+
+  /**
+   * Dok korisnik sam ne dodirne ukupnu jačinu, ona prati najjači označen
+   * region. Tako se za većinu unosa ukupan bol uopšte ne mora posebno birati.
+   */
+  function izvediBol() {
+    if (bolRucno) return;
+    let najjaci = 0;
+    for (const r of mapa.svaStanja().values()) najjaci = Math.max(najjaci, r.jacina ?? 0);
+    bolSkala.postavi(najjaci);
+    osveziBol();
+  }
 
   function osveziBol() {
     const j = bolSkala.vrednost() ?? 0;
@@ -304,8 +347,22 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
     deo = noviDeo;
     const unos = dohvatiUnos(kljuc, deo);
 
+    bolRucno = unos?.bol != null;
     bolSkala.postavi(unos?.bol ?? 0);
     osveziBol();
+
+    const raniji = poslednjiUnos(deo, kljuc);
+    elPrepisi.hidden = !raniji;
+    if (raniji) {
+      /* „Kao juče" se čita brže od datuma, a datum ostaje kad je stariji. */
+      const kada = imeDana(raniji.kljuc);
+      elPrepisiIme.textContent = kada === 'juče' || kada === 'danas'
+        ? `Kao ${kada}` : `Kao ${punDatum(raniji.kljuc)}`;
+      const n = Object.keys(raniji.unos.regioni ?? {}).length;
+      elPrepisiPod.textContent = n ? `${n} ${n === 1 ? 'region' : 'regiona'}` : '';
+      elPrepisi.setAttribute('aria-label',
+        `Prepiši unos sa ${punDatum(raniji.kljuc)}${n ? `, ${n} ${n === 1 ? 'region' : 'regiona'}` : ''}`);
+    }
 
     mapa.ocistiSve();
     for (const r of REGIONI) osveziRegion(r.id);
@@ -326,6 +383,8 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
 
     elLegendaOblik.hidden = !rezim().upalni;
     elObrisi.hidden = !unos;
+    elSpisakPrekidac.setAttribute('aria-expanded', 'false');
+    elSpisak.hidden = true;
     scrollTo(0, 0);
   }
 
@@ -352,6 +411,7 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
 
   /* Jedan dodir za deo dana u kom ništa ne boli: nula, bez ijednog regiona. */
   elBezBola.addEventListener('click', () => {
+    bolRucno = true;
     bolSkala.postavi(0);
     osveziBol();
     for (const id of [...mapa.svaStanja().keys()]) {

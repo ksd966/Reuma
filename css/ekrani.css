@@ -509,3 +509,35 @@ body[data-dno="da"] .strana{padding-bottom:calc(78px + var(--safe-bottom))}
 .dno{grid-template-columns:repeat(5,1fr)}
 .dno button{font-size:9.5px;letter-spacing:0;padding-left:1px;padding-right:1px}
 .dno button svg{width:22px;height:22px}
+
+/* ── dve brze radnje jedna do druge ─────────────────────────────────── */
+.brze-radnje{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px}
+.brze-radnje:has(button[hidden]){grid-template-columns:1fr}
+.dugme--brza{
+  min-height:52px;padding:8px 12px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  background:var(--surface);border:1px solid var(--line-strong);color:var(--text);
+  font-size:14px;font-weight:600;line-height:1.3;
+}
+.dugme--brza__pod{color:var(--muted);font-size:12px;font-weight:500}
+.dugme--brza__pod:empty{display:none}
+
+/* ── sklopiv spisak regiona ─────────────────────────────────────────── */
+.sklopivo{
+  width:100%;min-height:var(--meta);
+  display:grid;grid-template-columns:1fr auto;align-items:center;gap:2px 12px;
+  padding:14px 16px;text-align:left;
+  border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);
+}
+.sklopivo__ime{grid-column:1;font-size:15px;font-weight:600;letter-spacing:-.01em}
+.sklopivo__pod{grid-column:1;color:var(--muted);font-size:12.5px;line-height:1.45}
+.sklopivo__strelica{grid-column:2;grid-row:1/3;color:var(--muted);transition:transform .18s ease}
+.sklopivo[aria-expanded="true"] .sklopivo__strelica{transform:rotate(180deg)}
+.sklopivo[aria-expanded="true"]{
+  border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom-color:transparent;
+}
+.sklopivo[aria-expanded="true"] + .spisak{
+  border:1px solid var(--line);border-top:none;
+  border-radius:0 0 var(--radius) var(--radius);
+  padding:4px 14px 14px;margin-top:0;
+}

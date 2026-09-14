@@ -14,7 +14,14 @@ medicinski uređaj.
   pogleda (napred, nazad, levi i desni bok). 36 regiona, svaki zaseban i
   imenovan; dodir otvara list odozdo sa jačinom 0–10 i vrstom bola.
 - **Spisak regiona** — isti unos bez okretanja modela; to je ujedno i put kojim
-  čitač ekrana dolazi do svih regiona.
+  čitač ekrana dolazi do svih regiona. Sklopljen je dok ne zatreba, da ne gura
+  ostatak unosa daleko nadole.
+- **Kratak unos** — kod hroničnog bola ista mesta bole iz dana u dan, pa jedan
+  unos staje u tri dodira: „Kao juče" prepiše poslednji unos za isti deo dana,
+  jačina se popravi ako treba, pa „Sačuvaj". Kad se unosi region po region,
+  dodir na broj u listu **čuva i zatvara** — zato su vrsta bola i stanje zgloba
+  iznad brojeva, a ne ispod. Ukupna jačina se sama izvodi iz najjačeg
+  označenog regiona dok je korisnik ne dodirne.
 - **Tri unosa dnevno** — jutro, podne i veče, svaki sa svojom ukupnom jačinom
   bola i svojom mapom tela. Jutro nosi jutarnju ukočenost i san, podne
   opterećenje i umor, veče umor i kakav je dan bio u celini. Unos može i

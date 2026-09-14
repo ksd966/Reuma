@@ -1,8 +1,12 @@
 /**
  * List odozdo za unos bola u jednom regionu.
  *
- * Jedan region po otvaranju; više regiona se označava tako što se list zatvori
- * i dodirne sledeći region — zato jedan unos može da nosi koliko god regiona.
+ * Redosled je namerno ovakav: prvo kakav je bol i stanje zgloba, pa tek onda
+ * jačina — jer **dodir na broj čuva i zatvara**. Tako je za jedan region
+ * dovoljan jedan dodir kad ostalo ne treba menjati, umesto tri.
+ *
+ * Više regiona se označava tako što se list zatvori i dodirne sledeći region,
+ * pa jedan unos može da nosi koliko god regiona.
  */
 
 import { VRSTE_BOLA, stepenZa } from './telo/regioni.js';
@@ -19,7 +23,8 @@ export function napraviList({ naPotvrdu, naUklanjanje, naZatvaranje }) {
   const elSkala = document.getElementById('jacina-skala');
   const elVrste = document.getElementById('vrste');
   const dUkloni = document.getElementById('ukloni');
-  const dPotvrdi = document.getElementById('potvrdi');
+  const dZatvori = document.getElementById('zatvori-list');
+  const elSavet = document.getElementById('list-savet');
   const elUpalno = document.getElementById('zglob-upalno');
   const elStanje = document.getElementById('zglob-stanje');
 
@@ -34,7 +39,7 @@ export function napraviList({ naPotvrdu, naUklanjanje, naZatvaranje }) {
     b.addEventListener('click', () => {
       znaci[b.dataset.znak] = !znaci[b.dataset.znak];
       osveziZnake();
-      osveziJacinu();
+      osveziSavet();
     });
   }
 
@@ -64,22 +69,35 @@ export function napraviList({ naPotvrdu, naUklanjanje, naZatvaranje }) {
 
   const skala = napraviSkalu(elSkala, {
     oznaka: 'Jačina bola od 0 do 10',
-    naIzbor: osveziJacinu
+    naIzbor: (j) => { prikaziJacinu(j); primeniIZatvori(j); }
   });
 
-  function osveziJacinu() {
-    const j = skala.vrednost() ?? 0;
+  function prikaziJacinu(j) {
     elBroj.textContent = String(j);
     elBroj.style.color = j === 0 ? 'var(--dim)' : stepenZa(j).boja;
-    if (j === 0) {
-      elRec.textContent = imaZnak() ? 'bez bola, ali označen' : 'bez bola';
-      /* Nula bez ijednog znaka znači da region više ništa ne nosi — potvrda
-         ga tada uklanja, umesto da ostavi prazan zapis. */
-      dPotvrdi.textContent = (!imaZnak() && tekuci?.postojeci) ? 'Ukloni oznaku' : 'Potvrdi';
+    elRec.textContent = j === 0
+      ? (imaZnak() ? 'bez bola, ali označen' : 'bez bola')
+      : recZaJacinu(j);
+  }
+
+  function osveziSavet() {
+    elSavet.textContent = imaZnak()
+      ? 'Dodir na broj čuva i zatvara. Nula znači: označen, ali ne boli.'
+      : 'Dodir na broj čuva i zatvara. Nula uklanja oznaku.';
+    prikaziJacinu(skala.vrednost() ?? 0);
+  }
+
+  /** Jedan dodir na broj je ceo unos za taj region. */
+  function primeniIZatvori(j) {
+    if (!tekuci) return;
+    if (j === 0 && !imaZnak()) {
+      naUklanjanje?.(tekuci.id);
     } else {
-      elRec.textContent = recZaJacinu(j);
-      dPotvrdi.textContent = 'Potvrdi';
+      const unos = { jacina: j, vrsta };
+      for (const [k, v] of Object.entries(znaci)) if (v) unos[k] = true;
+      naPotvrdu?.(tekuci.id, unos);
     }
+    zatvori();
   }
 
   function otvori(region, postojeci, poreklo) {
@@ -100,7 +118,7 @@ export function napraviList({ naPotvrdu, naUklanjanje, naZatvaranje }) {
 
     osveziVrste();
     osveziZnake();
-    osveziJacinu();
+    osveziSavet();
 
     list.hidden = false;
     zastor.hidden = false;
@@ -122,24 +140,13 @@ export function napraviList({ naPotvrdu, naUklanjanje, naZatvaranje }) {
     if (bio) naZatvaranje?.(bio.id);
   }
 
-  dPotvrdi.addEventListener('click', () => {
-    if (!tekuci) return;
-    const j = skala.vrednost() ?? 0;
-    if (j === 0 && !imaZnak()) {
-      naUklanjanje?.(tekuci.id);
-    } else {
-      const unos = { jacina: j, vrsta };
-      for (const [k, v] of Object.entries(znaci)) if (v) unos[k] = true;
-      naPotvrdu?.(tekuci.id, unos);
-    }
-    zatvori();
-  });
-
   dUkloni.addEventListener('click', () => {
     if (!tekuci) return;
     naUklanjanje?.(tekuci.id);
     zatvori();
   });
+
+  dZatvori.addEventListener('click', zatvori);
 
   zastor.addEventListener('click', zatvori);
   document.addEventListener('keydown', (e) => {

@@ -171,6 +171,21 @@ export function dohvatiUnos(kljuc, deo) {
   return dohvatiDan(kljuc)[deo] ?? null;
 }
 
+/**
+ * Poslednji raniji unos za isti deo dana.
+ *
+ * Kod hroničnog bola ista mesta bole iz dana u dan, pa prepisivanje poslednjeg
+ * unosa štedi najviše koraka — ostane samo da se popravi jačina.
+ */
+export function poslednjiUnos(deo, preKljuca) {
+  const dani = ucitaj().dani;
+  const kljucevi = Object.keys(dani).filter(k => k < preKljuca).sort().reverse();
+  for (const k of kljucevi) {
+    if (dani[k][deo]) return { kljuc: k, unos: dani[k][deo] };
+  }
+  return null;
+}
+
 export function upisiUnos(kljuc, deo, unos) {
   const p = ucitaj();
   p.dani[kljuc] ||= {};

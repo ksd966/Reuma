@@ -1,7 +1,7 @@
 /* Artron — service worker.
    Pri svakoj izmeni podići VERZIJU, inače korisnik i dalje gleda staru verziju. */
 
-const VERZIJA = 'v11';
+const VERZIJA = 'v13';
 const LJUSKA = `ljuska-${VERZIJA}`;
 const PODACI = `podaci-${VERZIJA}`;
 
