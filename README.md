@@ -21,7 +21,13 @@ medicinski uređaj.
   jačina se popravi ako treba, pa „Sačuvaj". Kad se unosi region po region,
   dodir na broj u listu **čuva i zatvara** — zato su vrsta bola i stanje zgloba
   iznad brojeva, a ne ispod. Ukupna jačina se sama izvodi iz najjačeg
-  označenog regiona dok je korisnik ne dodirne.
+  označenog regiona dok je korisnik ne dodirne. Dugme za prepis bira najbliži
+  izvor: raniji deo istog dana ako postoji („Kao jutros"), inače isti deo
+  prethodnog dana („Kao juče").
+- **Najčešći regioni** — kratak red mesta koja se najčešće označavaju, iznad
+  modela; jedan dodir otvara list za to mesto, bez okretanja tela.
+- **Još pitanja** — ukočenost, san, umor i ostalo stoje sklopljeni, pa je
+  „Sačuvaj" odmah nadohvat. Razviju se sami kad unos već nosi odgovore.
 - **Tri unosa dnevno** — jutro, podne i veče, svaki sa svojom ukupnom jačinom
   bola i svojom mapom tela. Jutro nosi jutarnju ukočenost i san, podne
   opterećenje i umor, veče umor i kakav je dan bio u celini. Unos može i
@@ -38,9 +44,12 @@ medicinski uređaj.
 - **Izveštaji** — nedelja, mesec, šest meseci i godina: prosečan bol uz
   poređenje sa prethodnim periodom, dana sa unosom, dana bez bolova, najjači
   dan, trend, tok dana u proseku i najčešće pogođeni regioni.
-- **Lekovi** — tri vrste, jer se različito prate: stalni sa potvrdom da su
-  uzeti, po potrebi sa brojačem dnevno i nedeljno, i biološka terapija sa
-  odbrojavanjem, rotacijom mesta primene i grafikom bola po danu ciklusa.
+- **Lekovi** — raspored i način uzimanja su nezavisni, pa svaka terapija ima
+  gde da stane: svaki dan (1–3 puta), određenim danima u nedelji, na svakih N
+  dana, ili po potrebi; tableta, injekcija ili infuzija. Lekovi u ciklusu
+  nose odbrojavanje i grafik bola po danu ciklusa, injekcije rotaciju mesta.
+- **Danas na redu** — ono što po rasporedu pada na taj dan, i na ekranu Dan i
+  na ekranu Lekovi, iz istog izvora.
 - **Dnevnik** — svi dani u jednom spisku, najnoviji gore, sa sva tri unosa u
   jednom redu i sažetkom: gde je bolelo, šta je još zabeleženo, koji lekovi.
   Dodir na dan otvara taj dan za izmenu.
@@ -76,15 +85,15 @@ Podešavanja pošteno prikazuju da li je dozvola data.
 Vraćanje iz kopije **spaja** dane umesto da ih zameni — vraćanje starije kopije
 ne sme da obriše ono što je u međuvremenu uneto.
 
-### Lekovi i biološka terapija
+### Lekovi
 
-Spisak lekova se pamti, pa se posle unosi sa nekoliko dodira — stalni se samo
-potvrde, a lek po potrebi ide na jedan dodir plusa. **Koliko je puta uzet lek
+Spisak lekova se pamti, pa se posle unosi sa nekoliko dodira — ono što je na
+redu se samo potvrdi, a lek po potrebi ide na jedan dodir plusa. **Koliko je puta uzet lek
 po potrebi sam po sebi govori kako je nedelja prošla**, pa se broji i dnevno i
 za sedam dana unazad.
 
-Kod biološke terapije se vidi odbrojavanje do sledeće doze, koji je dan
-ciklusa, i **koje mesto primene sledi po redu rotacije** — aplikacija ga sama
+Kod lekova u ciklusu se vidi odbrojavanje do sledeće doze, koji je dan
+ciklusa, i — kod injekcija — **koje mesto primene sledi po redu rotacije** — aplikacija ga sama
 predlaže, a može se izabrati i drugo. Beleži se reakcija na mestu primene i
 tegobe posle nje.
 
@@ -106,6 +115,40 @@ nedelji, godina po mesecu. Dani bez unosa se **ne popunjavaju nulom** — na
 grafiku ostaju kao tanka crtica na osnovi i ne ulaze u prosek, jer bi prosek od
 nepostojećih dana bio izmišljen podatak. Visina stubića nosi jačinu, a boja je
 samo pojačava.
+
+### Raspored leka, a ne „vrsta"
+
+Ranije su lekovi bili podeljeni na stalne, po potrebi i biološke — i ta podela
+je ćutke nosila raspored. „Stalni" je značilo *svaki dan*, „biološka" *svakih N
+dana + injekcija + rotacija mesta*. **Metotreksat nije imao gde da stane:**
+nedeljna tableta, najčešći lek u reumatologiji. Jedini način je bio prijaviti
+ga kao biološku terapiju sa ciklusom od 7 dana, pa bi tableta dobila rotaciju
+mesta uboda.
+
+Sada su to tri nezavisne osobine:
+
+| | |
+|---|---|
+| **raspored** | `dnevno` (1–3 puta), `nedeljno` (dani u nedelji), `ciklus` (svakih N dana), `poPotrebi` |
+| **način** | `tableta`, `injekcija`, `infuzija` |
+| **doza** | slobodan tekst, onako kako je korisnik otkucao |
+
+Od načina zavisi **šta se beleži**: tableta se potvrđuje kvadratićem, injekcija
+nosi mesto uboda sa rotacijom i reakciju, infuzija reakciju ali ne i mesto —
+ide u venu, rotacija tu nema smisla. Od rasporeda zavisi **kada se lek pojavi**
+kao „danas na redu".
+
+Zapisi se i dalje čuvaju na dva mesta, jer nose različite podatke: `uzimanja`
+za tablete, `primene` za injekcije i infuzije. `dogadjajiLeka()` ih spaja u
+jedan niz, pa odbrojavanje, grafik ciklusa i izvoz ne moraju da znaju koje je
+koje.
+
+Lekovi uneti u ranijoj verziji prevode se pri pokretanju (`migrirajLekove()`) —
+stalni u dnevni raspored, biološki u ciklus sa injekcijom, po potrebi ostaje
+kako jeste. Zabeležena uzimanja i primene se ne diraju.
+
+Dozе se štikliraju po svom mestu u danu, ne odozgo: dodir na večernju dozu
+označava večernju, a ne jutarnju.
 
 ### Zašto podsetnici idu kroz Kalendar
 
@@ -259,7 +302,7 @@ js/izvestaj.js          ekran izveštaja i grafici
 js/dnevnik.js           spisak svih dana
 js/izvoz.js             izvoz u CSV za lekara i slanje datoteke
 js/kalendar.js          podsetnici za lekove kao .ics za Kalendar
-js/lekovi.js            lekovi, uzimanja, primene, odbrojavanje, rotacija
+js/lekovi.js            raspored, način, šta je danas na redu, odbrojavanje
 js/ekran-lekovi.js      spisak, odbrojavanje i grafik ciklusa
 js/ekran-lek.js         unos i izmena jednog leka
 js/unos-dana.js         unos za jedan deo dana

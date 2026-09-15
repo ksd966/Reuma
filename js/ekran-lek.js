@@ -5,22 +5,27 @@
  * kuca samo naziv i doza, a sve ostalo se bira.
  */
 
-import { VRSTE, NACINI, CIKLUSI, lek, upisiLek, skloniLek, vratiLek } from './lekovi.js';
+import {
+  RASPOREDI, NACINI, CIKLUSI, DANI_NEDELJE, PODRAZUMEVANA_VREMENA,
+  lek, upisiLek, skloniLek, vratiLek
+} from './lekovi.js';
 
 export function napraviEkranLeka({ naZavrsetak, naJavljanje }) {
   const elNaziv = document.getElementById('lek-naziv');
   const elDoza = document.getElementById('lek-doza');
-  const elVrsta = document.getElementById('lek-vrsta');
+  const elNacin = document.getElementById('lek-nacin');
+  const elRaspored = document.getElementById('lek-raspored');
   const elDodatno = document.getElementById('lek-dodatno');
   const elSacuvaj = document.getElementById('lek-sacuvaj');
   const elSkloni = document.getElementById('lek-skloni');
   const elPoruka = document.getElementById('lek-poruka');
 
   let tekuci = null;          // null = nov lek
-  let vrsta = 'stalni';
-  let nacin = 'potkozno';
+  let nacin = 'tableta';
+  let rasporedVrsta = 'dnevno';
   let ciklusDana = 14;
-  let vremena = [];
+  let vremena = ['08:00'];
+  let dani = [];              // 1 = ponedeljak … 7 = nedelja
 
   /* ── izbori ───────────────────────────────────────────────────────── */
 
@@ -68,58 +73,80 @@ export function napraviEkranLeka({ naZavrsetak, naJavljanje }) {
     return okvir;
   }
 
-  /* ── polja koja zavise od vrste ───────────────────────────────────── */
+  /** Prekidači za više vrednosti odjednom — dani u nedelji. */
+  function viseRed(opcije, izabrano, naIzmenu) {
+    const r = document.createElement('div');
+    r.className = 'izbori';
+    r.setAttribute('role', 'group');
+    for (const o of opcije) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = o.ime;
+      b.setAttribute('aria-label', o.puno ?? o.ime);
+      b.setAttribute('aria-pressed', String(izabrano.includes(o.v)));
+      b.addEventListener('click', () => {
+        naIzmenu(o.v);
+        b.setAttribute('aria-pressed', String(!(b.getAttribute('aria-pressed') === 'true')));
+      });
+      r.appendChild(b);
+    }
+    return r;
+  }
+
+  /**
+   * Koliko puta dnevno — pločicom, ne vrtenjem točkića za svaku dozu.
+   * Ponuđena vremena se posle mogu pomeriti, ali retko i treba.
+   */
+  function poljeDoza() {
+    const okvir = naslovPolja('Koliko puta dnevno');
+    const broj = [1, 2, 3].map(n => ({ v: n, ime: `${n}×` }));
+    okvir.appendChild(red(broj, vremena.length, (n) => {
+      vremena = [...PODRAZUMEVANA_VREMENA[n]];
+      iscrtajDodatno();
+    }));
+
+    const vrem = document.createElement('div');
+    vrem.className = 'vremena';
+    vremena.forEach((v, i) => {
+      const u = document.createElement('input');
+      u.type = 'time';
+      u.className = 'unos';
+      u.value = v;
+      u.setAttribute('aria-label', `Vreme ${i + 1}. doze`);
+      u.addEventListener('change', () => {
+        if (u.value) vremena[i] = u.value;
+      });
+      vrem.appendChild(u);
+    });
+    okvir.appendChild(vrem);
+    return okvir;
+  }
+
+  /* ── polja koja zavise od rasporeda ───────────────────────────────── */
   function iscrtajDodatno() {
     elDodatno.replaceChildren();
 
-    if (vrsta === 'stalni') {
-      const okvir = naslovPolja('Vreme uzimanja', 'Može i više puta dnevno');
-      const spisak = document.createElement('div');
-      spisak.className = 'izbori';
-
-      for (const v of vremena) {
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.setAttribute('aria-pressed', 'true');
-        b.textContent = `${v}  ✕`;
-        b.setAttribute('aria-label', `Ukloni vreme ${v}`);
-        b.addEventListener('click', () => {
-          vremena = vremena.filter(x => x !== v);
-          iscrtajDodatno();
-        });
-        spisak.appendChild(b);
-      }
-
-      const unos = document.createElement('input');
-      unos.type = 'time';
-      unos.className = 'unos';
-      unos.id = 'lek-vreme';
-      unos.setAttribute('aria-label', 'Novo vreme uzimanja');
-
-      const dodaj = document.createElement('button');
-      dodaj.type = 'button';
-      dodaj.className = 'dugme';
-      dodaj.style.cssText = 'width:100%;margin-top:8px';
-      dodaj.textContent = 'Dodaj vreme';
-      dodaj.addEventListener('click', () => {
-        if (!unos.value || vremena.includes(unos.value)) return;
-        vremena = [...vremena, unos.value].sort();
-        iscrtajDodatno();
-      });
-
-      okvir.append(spisak, unos, dodaj);
-      elDodatno.appendChild(okvir);
+    if (rasporedVrsta === 'nedeljno') {
+      const a = naslovPolja('Kojim danima', 'Metotreksat se obično pije jednom nedeljno');
+      a.appendChild(viseRed(DANI_NEDELJE, dani, (v) => {
+        dani = dani.includes(v) ? dani.filter(x => x !== v) : [...dani, v].sort();
+      }));
+      elDodatno.append(a, poljeDoza());
       return;
     }
 
-    if (vrsta === 'bioloska') {
-      const a = naslovPolja('Način primene');
-      a.appendChild(red(NACINI, nacin, (v) => { nacin = v; }));
-      const b = naslovPolja('Ciklus', 'Na koliko dana se daje sledeća doza');
-      b.appendChild(red(CIKLUSI, ciklusDana, (v) => { ciklusDana = v; }));
-      elDodatno.append(a, b);
+    if (rasporedVrsta === 'dnevno') {
+      elDodatno.appendChild(poljeDoza());
+      return;
     }
-    /* „Po potrebi" nema dodatnih polja — broji se samo koliko puta je uzet. */
+
+    if (rasporedVrsta === 'ciklus') {
+      const b = naslovPolja('Na koliko dana', 'Razmak do sledeće doze');
+      b.appendChild(red(CIKLUSI, ciklusDana, (v) => { ciklusDana = v; }));
+      elDodatno.appendChild(b);
+      return;
+    }
+    /* „Po potrebi" nema rasporeda — broji se samo koliko puta je uzet. */
   }
 
   /* ── otvaranje ────────────────────────────────────────────────────── */
@@ -129,12 +156,15 @@ export function napraviEkranLeka({ naZavrsetak, naJavljanje }) {
 
     elNaziv.value = tekuci?.naziv ?? '';
     elDoza.value = tekuci?.doza ?? '';
-    vrsta = tekuci?.vrsta ?? 'stalni';
-    nacin = tekuci?.nacin ?? 'potkozno';
-    ciklusDana = tekuci?.ciklusDana ?? 14;
-    vremena = [...(tekuci?.vremena ?? [])];
+    const r = tekuci?.raspored;
+    nacin = tekuci?.nacin ?? 'tableta';
+    rasporedVrsta = r?.vrsta ?? 'dnevno';
+    ciklusDana = r?.ciklusDana ?? 14;
+    vremena = r?.vremena?.length ? [...r.vremena] : ['08:00'];
+    dani = [...(r?.dani ?? [])];
 
-    napuni(elVrsta, VRSTE, vrsta, (v) => { vrsta = v; iscrtajDodatno(); });
+    napuni(elNacin, NACINI, nacin, (v) => { nacin = v; });
+    napuni(elRaspored, RASPOREDI, rasporedVrsta, (v) => { rasporedVrsta = v; iscrtajDodatno(); });
     iscrtajDodatno();
     elSkloni.hidden = !tekuci;
     elSkloni.textContent = tekuci?.sklonjen ? 'Vrati u upotrebu' : 'Skloni';
@@ -148,11 +178,17 @@ export function napraviEkranLeka({ naZavrsetak, naJavljanje }) {
       elNaziv.focus();
       return;
     }
-    const podaci = { id: tekuci?.id, naziv, doza: elDoza.value.trim() || undefined, vrsta };
-    if (vrsta === 'stalni') podaci.vremena = vremena;
-    if (vrsta === 'bioloska') { podaci.nacin = nacin; podaci.ciklusDana = ciklusDana; }
+    if (rasporedVrsta === 'nedeljno' && !dani.length) {
+      elPoruka.textContent = 'Izaberite bar jedan dan u nedelji.';
+      return;
+    }
 
-    upisiLek(podaci);
+    const raspored = { vrsta: rasporedVrsta };
+    if (rasporedVrsta === 'dnevno') raspored.vremena = [...vremena];
+    if (rasporedVrsta === 'nedeljno') { raspored.dani = [...dani]; raspored.vremena = [...vremena]; }
+    if (rasporedVrsta === 'ciklus') raspored.ciklusDana = ciklusDana;
+
+    upisiLek({ id: tekuci?.id, naziv, doza: elDoza.value.trim() || undefined, nacin, raspored });
     naJavljanje?.(tekuci ? `Izmenjeno — ${naziv}` : `Dodato — ${naziv}`);
     naZavrsetak();
   });

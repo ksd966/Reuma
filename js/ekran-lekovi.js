@@ -6,10 +6,11 @@
  */
 
 import {
-  VRSTE, NACINI, MESTA, REAKCIJE, CIKLUSI,
-  lekovi, lekoviVrste, lek, upisiLek, skloniLek, vratiLek,
+  NACINI, MESTA, REAKCIJE,
+  lekovi, lekoviRasporeda,
   uzimanjaLeka, brojUzimanja, zabeleziUzimanje, ponistiUzimanje,
-  poslednjaPrimena, zabeleziPrimenu, sledeceMesto, odbrojavanje
+  zabeleziPrimenu, sledeceMesto, odbrojavanje, postaviBrojUzimanja,
+  naReduNa, opisRasporeda, beleziPrimenu, beleziMesto
 } from './lekovi.js';
 import { napraviKalendar, imeKalendara, brojPodsetnika } from './kalendar.js';
 import { posaljiDatoteku } from './izvoz.js';
@@ -33,9 +34,9 @@ export function napraviEkranLekova({ naOtvaranjeLeka, naJavljanje, naIzmenu }) {
       return;
     }
     const delovi = [
-      odeljakBioloska(),
-      odeljakStalni(),
+      odeljakDanas(),
       odeljakPoPotrebi(),
+      odeljakOdbrojavanja(),
       odeljakSvi(),
       odeljakPodsetnika()
     ].filter(Boolean);
@@ -62,9 +63,9 @@ export function napraviEkranLekova({ naOtvaranjeLeka, naJavljanje, naIzmenu }) {
     return s;
   }
 
-  /* ── biološka terapija ────────────────────────────────────────────── */
-  function odeljakBioloska() {
-    const svi = lekoviVrste('bioloska');
+  /* ── odbrojavanje (lekovi u ciklusu) ──────────────────────────────── */
+  function odeljakOdbrojavanja() {
+    const svi = lekoviRasporeda('ciklus');
     if (!svi.length) return null;
     const deca = [];
     for (const l of svi) {
@@ -72,7 +73,7 @@ export function napraviEkranLekova({ naOtvaranjeLeka, naJavljanje, naIzmenu }) {
       const g = grafikCiklusa(l);
       if (g) deca.push(g);
     }
-    return odeljak('Biološka terapija', deca);
+    return odeljak('Odbrojavanje', deca);
   }
 
   function karticaBioloske(l) {
@@ -81,7 +82,7 @@ export function napraviEkranLekova({ naOtvaranjeLeka, naJavljanje, naIzmenu }) {
     k.className = 'bioloska';
 
     const naciniIme = NACINI.find(n => n.id === l.nacin)?.ime ?? '';
-    const ciklusIme = CIKLUSI.find(c => c.v === l.ciklusDana)?.ime ?? `svakih ${l.ciklusDana} dana`;
+    const ciklusIme = opisRasporeda(l);
 
     if (!o) {
       k.innerHTML = `
@@ -141,7 +142,7 @@ export function napraviEkranLekova({ naOtvaranjeLeka, naJavljanje, naIzmenu }) {
    * sledeću dozu, to se vidi na prvi pogled.
    */
   function grafikCiklusa(l) {
-    const r = bolPoDanuCiklusa(l.id, l.ciklusDana, kljuc);
+    const r = bolPoDanuCiklusa(l.id, l.raspored?.ciklusDana, kljuc);
     if (!r) return null;
 
     const okvir = document.createElement('section');
@@ -218,49 +219,57 @@ export function napraviEkranLekova({ naOtvaranjeLeka, naJavljanje, naIzmenu }) {
     return okvir;
   }
 
-  /* ── stalni ───────────────────────────────────────────────────────── */
-  function odeljakStalni() {
-    const svi = lekoviVrste('stalni');
-    if (!svi.length) return null;
+  /* ── šta je danas na redu ─────────────────────────────────────────── */
 
-    const deca = [];
-    for (const l of svi) {
-      const vremena = l.vremena?.length ? l.vremena : [null];
-      const uzeto = uzimanjaLeka(l.id, kljuc);
-      vremena.forEach((v, i) => {
-        const jeUzeto = uzeto.length > i;
-        const d = document.createElement('button');
-        d.type = 'button';
-        d.className = 'doza';
-        d.dataset.uzeto = jeUzeto ? 'da' : 'ne';
-        d.setAttribute('aria-pressed', String(jeUzeto));
-        d.innerHTML = `
-          <span class="doza__kvadrat" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#14171A"
-                 stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 12.5 L9.5 18 L20 6.5"/>
-            </svg>
-          </span>
-          <span class="doza__tekst">
-            <span class="doza__ime">${l.naziv}</span>
-            <span class="doza__pod">${[l.doza, v].filter(Boolean).join(' · ')}${
-              jeUzeto ? ` · uzeto u ${uzeto[i].vreme}` : ''}</span>
-          </span>`;
-        d.addEventListener('click', () => {
-          if (jeUzeto) ponistiUzimanje(l.id, kljuc);
-          else zabeleziUzimanje(l.id, kljuc);
-          iscrtaj();
-          naIzmenu?.();
-        });
-        deca.push(d);
+  /**
+   * Jedan spisak za sve rasporede: dnevni, nedeljni i ciklus. Tableta se
+   * potvrđuje kvadratićem, injekcija i infuzija otvaraju list sa mestom i
+   * reakcijom — jer nose više od same potvrde.
+   */
+  function odeljakDanas() {
+    const red = naReduNa(kljuc);
+    if (!red.length) return null;
+
+    const deca = red.map(({ lek: l, redni: redniBroj, vreme, uzeto, kasni }) => {
+      const d = document.createElement('button');
+      d.type = 'button';
+      d.className = 'doza';
+      d.dataset.uzeto = uzeto ? 'da' : 'ne';
+      if (kasni && !uzeto) d.dataset.kasni = 'da';
+      d.setAttribute('aria-pressed', String(uzeto));
+
+      const pod = [l.doza, vreme, kasni && !uzeto ? 'kasni' : null].filter(Boolean).join(' · ');
+      d.innerHTML = `
+        <span class="doza__kvadrat" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#14171A"
+               stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 12.5 L9.5 18 L20 6.5"/>
+          </svg>
+        </span>
+        <span class="doza__tekst">
+          <span class="doza__ime">${l.naziv}</span>
+          <span class="doza__pod">${pod}</span>
+        </span>`;
+
+      d.addEventListener('click', () => {
+        if (beleziPrimenu(l)) {
+          /* Injekcija nosi mesto i reakciju — to se ne staje u kvadratić. */
+          if (!uzeto) otvoriPrimenu(l);
+          return;
+        }
+        postaviBrojUzimanja(l.id, kljuc, uzeto ? redniBroj : redniBroj + 1);
+        iscrtaj();
+        naIzmenu?.();
       });
-    }
-    return odeljak(jeDanas(kljuc) ? 'Danas — stalni' : `Stalni — ${imeDana(kljuc)}`, deca);
+      return d;
+    });
+
+    return odeljak(jeDanas(kljuc) ? 'Danas na redu' : `Na redu — ${imeDana(kljuc)}`, deca);
   }
 
   /* ── po potrebi ───────────────────────────────────────────────────── */
   function odeljakPoPotrebi() {
-    const svi = lekoviVrste('poPotrebi');
+    const svi = lekoviRasporeda('poPotrebi');
     if (!svi.length) return null;
 
     const deca = svi.map(l => {
@@ -358,15 +367,11 @@ export function napraviEkranLekova({ naOtvaranjeLeka, naJavljanje, naIzmenu }) {
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'lek-red';
-      const vrsta = VRSTE.find(v => v.id === l.vrsta)?.ime ?? '';
-      const detalj = l.vrsta === 'bioloska'
-        ? [NACINI.find(n => n.id === l.nacin)?.ime, CIKLUSI.find(c => c.v === l.ciklusDana)?.ime]
-            .filter(Boolean).join(' · ')
-        : (l.vremena?.join(', ') ?? '');
+      const nacinIme = NACINI.find(n => n.id === l.nacin)?.ime ?? '';
       b.innerHTML = `
         <span class="lek-red__ime">${l.naziv}</span>
-        <span class="lek-red__pod">${[l.doza, detalj].filter(Boolean).join(' · ')}</span>
-        <span class="lek-red__desno">${vrsta}</span>`;
+        <span class="lek-red__pod">${[l.doza, opisRasporeda(l)].filter(Boolean).join(' · ')}</span>
+        <span class="lek-red__desno">${nacinIme}</span>`;
       b.addEventListener('click', () => naOtvaranjeLeka(l.id));
       return b;
     });
@@ -381,6 +386,7 @@ export function napraviEkranLekova({ naOtvaranjeLeka, naJavljanje, naIzmenu }) {
   const elDatum = document.getElementById('primena-datum');
   const elPredlog = document.getElementById('primena-predlog');
   const elMesto = document.getElementById('primena-mesto');
+  const elMestoPolje = document.getElementById('primena-mesto-polje');
   const elReakcija = document.getElementById('primena-reakcija');
   const elBeleska = document.getElementById('primena-beleska');
 
@@ -404,7 +410,9 @@ export function napraviEkranLekova({ naOtvaranjeLeka, naJavljanje, naIzmenu }) {
   function otvoriPrimenu(l) {
     primenaLek = l;
     const predlog = sledeceMesto(l.id);
-    izabranoMesto = predlog.id;
+    /* Infuzija ide u venu — rotacija mesta tu nema smisla, pa se i ne pita. */
+    const traziMesto = beleziMesto(l);
+    izabranoMesto = traziMesto ? predlog.id : undefined;
     izabranaReakcija = 'nista';
 
     elPrimenaIme.textContent = l.naziv;
@@ -414,6 +422,7 @@ export function napraviEkranLekova({ naOtvaranjeLeka, naJavljanje, naIzmenu }) {
     elPredlog.textContent = `Po redu rotacije sledi: ${predlog.ime}`;
     elBeleska.value = '';
 
+    elMestoPolje.hidden = !traziMesto;
     napuniIzbore(elMesto, MESTA, izabranoMesto, (v) => { izabranoMesto = v; });
     napuniIzbore(elReakcija, REAKCIJE, izabranaReakcija, (v) => { izabranaReakcija = v; });
 

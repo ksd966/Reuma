@@ -568,3 +568,23 @@ body[data-dno="da"] .strana{padding-bottom:calc(78px + var(--safe-bottom))}
   border-radius:0 0 var(--radius) var(--radius);
   padding:4px 14px 14px;margin-top:0;
 }
+
+/* ── lekovi na ekranu dana ──────────────────────────────────────────── */
+.danas-lekovi{margin-top:18px}
+.doza--zbijena{min-height:56px;padding:11px 14px;margin-bottom:7px}
+.doza[data-kasni="da"]{border-color:var(--s-warn)}
+
+/* ── najčešći regioni ───────────────────────────────────────────────── */
+.cesti{margin-bottom:4px}
+.cesti__naslov{
+  font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--dim);margin-bottom:8px;
+}
+.cesti__red{display:flex;flex-wrap:wrap;gap:8px}
+.cesti__dugme{
+  min-height:var(--meta);padding:0 15px;
+  border:1.5px solid var(--line-strong);border-radius:99px;
+  background:var(--kontrola);color:var(--text);
+  font-size:14px;font-weight:500;
+}
+.cesti__dugme[data-oznacen="da"]{font-weight:600;background:var(--surface-2)}

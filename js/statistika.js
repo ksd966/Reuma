@@ -7,7 +7,7 @@
  */
 
 import { DELOVI, dohvatiDan, pomeriDan, kljucDana, izKljuca } from './skladiste.js';
-import { primeneLeka } from './lekovi.js';
+import { dogadjajiLeka } from './lekovi.js';
 
 export const PERIODI = [
   { id: 'nedelja', ime: 'Nedelja',   dana: 7,   grupa: 'dan' },
@@ -174,7 +174,7 @@ export function izvestaj(kraj, period, rezim) {
  * ostaje prazan, a ne nula.
  */
 export function bolPoDanuCiklusa(lekId, ciklusDana, danas = kljucDana()) {
-  const primene = primeneLeka(lekId);
+  const primene = dogadjajiLeka(lekId);
   if (!primene.length || !ciklusDana) return null;
 
   const kofe = Array.from({ length: ciklusDana }, () => []);

@@ -16,7 +16,7 @@ import { poljaZa } from './polja.js';
 import { napraviSkalu, recZaJacinu, recZaMeru } from './skala.js';
 import {
   DELOVI, dohvatiUnos, upisiUnos, obrisiUnos, imeDana, punDatum, sadaHHMM, rezim,
-  poslednjiUnos
+  izvorZaPrepis, cestiRegioni
 } from './skladiste.js';
 
 export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
@@ -34,6 +34,8 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
   const elPrepisiIme = document.getElementById('prepisi-ime');
   const elPrepisiPod = document.getElementById('prepisi-pod');
   const elSpisakPrekidac = document.getElementById('spisak-prekidac');
+  const elCesti = document.getElementById('cesti');
+  const elCestiRed = document.getElementById('cesti-red');
 
   /* Spisak od 36 regiona je sklopljen: razvučen, gurao je dugme za čuvanje i
      ostatak pitanja daleko nadole. */
@@ -45,6 +47,7 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
 
   let kljuc = null, deo = null, dodatnaVrednost = {};
   let bolRucno = false;          // da li je korisnik sam dirao ukupnu jačinu
+  let dodatnaOtvorena = false;   // „Još pitanja" ostaje sklopljeno dok ne zatreba
 
   /* ── spisak regiona ─────────────────────────────────────────────────── */
   const dugmadRegiona = new Map();
@@ -112,7 +115,7 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
   /* Kod hroničnog bola ista mesta bole iz dana u dan — prepisivanje poslednjeg
      unosa štedi najviše koraka, ostane samo da se popravi jačina. */
   elPrepisi.addEventListener('click', () => {
-    const p = poslednjiUnos(deo, kljuc);
+    const p = izvorZaPrepis(kljuc, deo);
     if (!p) return;
     mapa.ocistiSve();
     for (const r of REGIONI) osveziRegion(r.id);
@@ -123,8 +126,43 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
     }
     bolRucno = false;
     izvediBol();
-    naJavljanje?.(`Prepisano sa ${punDatum(p.kljuc)}`);
+    naJavljanje?.(p.kljuc === kljuc
+      ? `Prepisano sa: ${DELOVI.find(d => d.id === p.deo).ime.toLowerCase()}`
+      : `Prepisano sa ${punDatum(p.kljuc)}`);
   });
+
+  /**
+   * Kratak red mesta koja se najčešće označavaju — jedan dodir otvara list za
+   * taj region, bez okretanja modela. Model ostaje za sve ostalo.
+   */
+  function iscrtajCeste() {
+    const cesti = cestiRegioni().filter(c => PO_ID.has(c.id));
+    elCesti.hidden = !cesti.length;
+    if (!cesti.length) return;
+
+    elCestiRed.replaceChildren(...cesti.map(({ id }) => {
+      const r = PO_ID.get(id);
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'cesti__dugme';
+      b.dataset.region = id;
+      b.textContent = r.ime;
+      b.addEventListener('click', () => otvoriRegion(id, b));
+      return b;
+    }));
+    osveziCeste();
+  }
+
+  /** Označen region se i ovde vidi kao označen, sa jačinom. */
+  function osveziCeste() {
+    for (const b of elCestiRed.children) {
+      const stanje = mapa.stanjeRegiona(b.dataset.region);
+      b.dataset.oznacen = stanje ? 'da' : 'ne';
+      b.style.borderColor = stanje ? stepenZa(stanje.jacina).boja : '';
+      const osnovno = PO_ID.get(b.dataset.region).ime;
+      b.textContent = stanje ? `${osnovno} · ${stanje.jacina}` : osnovno;
+    }
+  }
 
   function otvoriRegion(id, poreklo) {
     const region = PO_ID.get(id);
@@ -134,6 +172,7 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
   }
 
   function osveziRegion(id) {
+    osveziCeste();
     const b = dugmadRegiona.get(id);
     if (!b) return;
     const unos = mapa.stanjeRegiona(id);
@@ -186,15 +225,40 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
   }
 
   /* ── pitanja uz deo dana ────────────────────────────────────────────── */
+
+  /**
+   * Sklopljena su, jer nisu obavezna: bol i regioni su unos, ovo je dopuna.
+   * Razvučena su gurala „Sačuvaj" daleko nadole — a kad su oba režima
+   * uključena, jutro ih ima pet.
+   */
   function iscrtajDodatna() {
     elDodatna.replaceChildren();
     const polja = poljaZa(deo, rezim());
     if (!polja.length) return;
 
-    const naslov = document.createElement('h2');
-    naslov.className = 'naslov-odeljka';
-    naslov.textContent = DELOVI.find(d => d.id === deo).opis;
-    elDodatna.appendChild(naslov);
+    const prekidac = document.createElement('button');
+    prekidac.type = 'button';
+    prekidac.className = 'sklopivo';
+    prekidac.id = 'dodatna-prekidac';
+    prekidac.setAttribute('aria-expanded', String(dodatnaOtvorena));
+    prekidac.setAttribute('aria-controls', 'dodatna-polja');
+    prekidac.innerHTML = `
+      <span class="sklopivo__ime">Još pitanja (${polja.length})</span>
+      <span class="sklopivo__pod">${DELOVI.find(d => d.id === deo).opis}</span>
+      <svg class="sklopivo__strelica" viewBox="0 0 24 24" aria-hidden="true" width="20" height="20"
+           fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 9 L12 16 L19 9"/>
+      </svg>`;
+
+    const okvir = document.createElement('div');
+    okvir.id = 'dodatna-polja';
+    okvir.hidden = !dodatnaOtvorena;
+
+    prekidac.addEventListener('click', () => {
+      dodatnaOtvorena = !dodatnaOtvorena;
+      prekidac.setAttribute('aria-expanded', String(dodatnaOtvorena));
+      okvir.hidden = !dodatnaOtvorena;
+    });
 
     const crtaci = {
       izbor: poljeIzbor,
@@ -203,8 +267,9 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
       viseizbor: poljeViseizbor
     };
     for (const polje of polja) {
-      elDodatna.appendChild((crtaci[polje.vrsta] ?? poljeMere)(polje));
+      okvir.appendChild((crtaci[polje.vrsta] ?? poljeMere)(polje));
     }
+    elDodatna.append(prekidac, okvir);
   }
 
   /** Da/ne, sa trećim mogućim stanjem — neodgovoreno. */
@@ -351,18 +416,22 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
     bolSkala.postavi(unos?.bol ?? 0);
     osveziBol();
 
-    const raniji = poslednjiUnos(deo, kljuc);
+    const raniji = izvorZaPrepis(kljuc, deo);
     elPrepisi.hidden = !raniji;
     if (raniji) {
-      /* „Kao juče" se čita brže od datuma, a datum ostaje kad je stariji. */
-      const kada = imeDana(raniji.kljuc);
-      elPrepisiIme.textContent = kada === 'juče' || kada === 'danas'
-        ? `Kao ${kada}` : `Kao ${punDatum(raniji.kljuc)}`;
+      elPrepisiIme.textContent = raniji.opis;
       const n = Object.keys(raniji.unos.regioni ?? {}).length;
       elPrepisiPod.textContent = n ? `${n} ${n === 1 ? 'region' : 'regiona'}` : '';
+      const odakle = raniji.kljuc === kljuc
+        ? DELOVI.find(d => d.id === raniji.deo).ime.toLowerCase()
+        : punDatum(raniji.kljuc);
       elPrepisi.setAttribute('aria-label',
-        `Prepiši unos sa ${punDatum(raniji.kljuc)}${n ? `, ${n} ${n === 1 ? 'region' : 'regiona'}` : ''}`);
+        `Prepiši unos — ${odakle}${n ? `, ${n} ${n === 1 ? 'region' : 'regiona'}` : ''}`);
     }
+
+    /* Ako unos već nosi odgovore na dodatna pitanja, ona se ne kriju — inače
+       bi izgledalo da su izgubljeni. */
+    dodatnaOtvorena = poljaZa(deo, rezim()).some(polje => unos?.[polje.id] != null);
 
     mapa.ocistiSve();
     for (const r of REGIONI) osveziRegion(r.id);
@@ -380,6 +449,7 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
       }
     }
     iscrtajDodatna();
+    iscrtajCeste();
 
     elLegendaOblik.hidden = !rezim().upalni;
     elObrisi.hidden = !unos;

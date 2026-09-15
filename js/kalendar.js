@@ -11,15 +11,27 @@
  * je sam zadao.
  */
 
-import { lekoviVrste, poslednjaPrimena, odbrojavanje, CIKLUSI } from './lekovi.js';
-import { kljucDana, punDatum } from './skladiste.js';
+import { lekovi, odbrojavanje, opisRasporeda, danUNedelji } from './lekovi.js';
+import { kljucDana, punDatum, pomeriDan } from './skladiste.js';
 
 /* Koliko unapred se pišu ponavljanja. Godinu dana je dovoljno da se ne misli
    na to, a dovoljno kratko da se zastarela terapija sama ugasi u kalendaru. */
 const DANA_UNAPRED = 365;
 
-/** Vreme podsetnika za biološku — ujutru, da ostane ceo dan za odlazak. */
-const VREME_BIOLOSKE = '09:00';
+/** Vreme podsetnika kad raspored ne nosi sat — ujutru, da ostane ceo dan. */
+const VREME_BEZ_SATA = '09:00';
+
+/** Oznake dana po standardu; indeks je 1 = ponedeljak … 7 = nedelja. */
+const SKRACENICE = { 1:'MO', 2:'TU', 3:'WE', 4:'TH', 5:'FR', 6:'SA', 7:'SU' };
+
+/** Prvi dan od `od` nadalje koji pada na jedan od zadatih dana u nedelji. */
+function prviTakavDan(od, dani) {
+  for (let i = 0; i < 7; i++) {
+    const k = pomeriDan(od, i);
+    if (dani.includes(danUNedelji(k))) return k;
+  }
+  return od;
+}
 
 const NAPOMENA =
   'Podsetnik koji ste sami podesili u aplikaciji Artron. ' +
@@ -111,44 +123,76 @@ export function napraviKalendar(danas = kljucDana()) {
   const preskoceno = [];
   let dogadjaja = 0;
 
-  for (const l of lekoviVrste('stalni')) {
-    if (!l.vremena?.length) {
+  for (const l of lekovi()) {
+    const r = l.raspored;
+    const naslov = [l.naziv, l.doza].filter(Boolean).join(' ');
+
+    if (!r || r.vrsta === 'poPotrebi') {
+      if (r) preskoceno.push(`${l.naziv} — uzima se po potrebi, nema rasporeda`);
+      continue;
+    }
+
+    if (r.vrsta === 'ciklus') {
+      const o = odbrojavanje(l, danas);
+      if (!o) {
+        preskoceno.push(`${l.naziv} — nijedna primena još nije zabeležena`);
+        continue;
+      }
+      /* Ako je dan primene prošao, red kreće od danas: podsetnik koji zvoni
+         unazad ne pomaže. */
+      const prvi = o.preostalo < 0 ? danas : o.sledeci;
+      redovi.push(...dogadjaj({
+        uid: `artron-ciklus-${l.id}`,
+        pocetak: trenutak(prvi, VREME_BEZ_SATA),
+        ponavljanje: `RRULE:FREQ=DAILY;INTERVAL=${r.ciklusDana};COUNT=${
+          Math.max(1, Math.ceil(DANA_UNAPRED / r.ciklusDana))}`,
+        naslov,
+        opis: `Raspored koji ste zadali: ${opisRasporeda(l)}. ` +
+              `Prvi podsetnik ${punDatum(prvi)}. ${NAPOMENA}`
+      }));
+      dogadjaja++;
+      continue;
+    }
+
+    const vremena = r.vremena?.length ? r.vremena : null;
+    if (!vremena) {
       preskoceno.push(`${l.naziv} — nije zadato vreme uzimanja`);
       continue;
     }
-    l.vremena.forEach((v, i) => {
+
+    if (r.vrsta === 'nedeljno') {
+      const dani = (r.dani ?? []).map(d => SKRACENICE[d]).filter(Boolean);
+      if (!dani.length) {
+        preskoceno.push(`${l.naziv} — nije zadat dan u nedelji`);
+        continue;
+      }
+      /* Prvi termin mora da padne na jedan od izabranih dana, inače bi
+         ponavljanje krenulo od pogrešne nedelje. */
+      const prvi = prviTakavDan(danas, r.dani);
+      vremena.forEach((v, i) => {
+        redovi.push(...dogadjaj({
+          uid: `artron-nedeljno-${l.id}-${i}`,
+          pocetak: trenutak(prvi, v),
+          ponavljanje: `RRULE:FREQ=WEEKLY;BYDAY=${dani.join(',')};COUNT=${
+            Math.max(1, Math.ceil(DANA_UNAPRED / 7) * dani.length)}`,
+          naslov,
+          opis: `${opisRasporeda(l)}. ${NAPOMENA}`
+        }));
+        dogadjaja++;
+      });
+      continue;
+    }
+
+    vremena.forEach((v, i) => {
       redovi.push(...dogadjaj({
-        uid: `artron-stalni-${l.id}-${i}`,
+        uid: `artron-dnevno-${l.id}-${i}`,
         pocetak: trenutak(danas, v),
         ponavljanje: `RRULE:FREQ=DAILY;COUNT=${DANA_UNAPRED}`,
-        naslov: [l.naziv, l.doza].filter(Boolean).join(' '),
+        naslov,
         opis: `Svakog dana u ${v}. ${NAPOMENA}`
       }));
       dogadjaja++;
     });
-  }
-
-  for (const l of lekoviVrste('bioloska')) {
-    const o = odbrojavanje(l, danas);
-    if (!o) {
-      preskoceno.push(`${l.naziv} — nijedna primena još nije zabeležena`);
-      continue;
-    }
-    /* Ako je dan primene prošao, red kreće od danas: podsetnik koji zvoni
-       unazad ne pomaže, a ciklus se dalje računa od tog datuma. */
-    const prvi = o.preostalo < 0 ? danas : o.sledeci;
-    const ponavljanja = Math.max(1, Math.ceil(DANA_UNAPRED / l.ciklusDana));
-    const ciklusIme = CIKLUSI.find(c => c.v === l.ciklusDana)?.ime ?? `svakih ${l.ciklusDana} dana`;
-
-    redovi.push(...dogadjaj({
-      uid: `artron-bioloska-${l.id}`,
-      pocetak: trenutak(prvi, VREME_BIOLOSKE),
-      ponavljanje: `RRULE:FREQ=DAILY;INTERVAL=${l.ciklusDana};COUNT=${ponavljanja}`,
-      naslov: [l.naziv, l.doza].filter(Boolean).join(' '),
-      opis: `Raspored koji ste zadali: ${ciklusIme}. ` +
-            `Prvi podsetnik ${punDatum(prvi)}. ${NAPOMENA}`
-    }));
-    dogadjaja++;
   }
 
   const sve = [
@@ -170,7 +214,12 @@ export const imeKalendara = () => `artron-podsetnici-${kljucDana()}.ics`;
 /** Ima li uopšte šta da se izveze — da se ne nudi prazna datoteka. */
 export function brojPodsetnika() {
   let n = 0;
-  for (const l of lekoviVrste('stalni')) n += l.vremena?.length ?? 0;
-  for (const l of lekoviVrste('bioloska')) if (poslednjaPrimena(l.id) && l.ciklusDana) n++;
+  for (const l of lekovi()) {
+    const r = l.raspored;
+    if (!r || r.vrsta === 'poPotrebi') continue;
+    if (r.vrsta === 'ciklus') { if (odbrojavanje(l)) n++; continue; }
+    if (r.vrsta === 'nedeljno' && !(r.dani?.length)) continue;
+    n += r.vremena?.length ?? 0;
+  }
   return n;
 }

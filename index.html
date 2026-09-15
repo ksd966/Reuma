@@ -82,6 +82,12 @@
     kojoj označavaš gde te boli i koliko.
   </p>
   <div class="delovi" id="delovi"></div>
+
+  <section class="danas-lekovi" id="danas-lekovi" hidden aria-labelledby="n-danas-lekovi">
+    <h2 class="naslov-odeljka" id="n-danas-lekovi">Lekovi za ovaj dan</h2>
+    <div id="danas-lekovi-spisak"></div>
+  </section>
+
   <div class="tok" id="tok" hidden></div>
   <div class="zbir" id="zbir" hidden></div>
 
@@ -130,6 +136,11 @@
 
   <section class="blok" aria-labelledby="n-mapa">
     <h2 class="naslov-odeljka" id="n-mapa">Gde boli</h2>
+
+    <div class="cesti" id="cesti" hidden>
+      <p class="cesti__naslov">Najčešće</p>
+      <div class="cesti__red" id="cesti-red" role="group" aria-label="Najčešće označavani regioni"></div>
+    </div>
 
     <div class="mapa">
       <canvas class="mapa__platno" id="platno" aria-hidden="true"></canvas>
@@ -210,8 +221,13 @@
   </div>
 
   <div class="polje">
-    <p class="polje__ime" id="lek-vrsta-ime">Kako se uzima</p>
-    <div class="izbori" id="lek-vrsta" role="group" aria-labelledby="lek-vrsta-ime"></div>
+    <p class="polje__ime" id="lek-nacin-ime">Kako se uzima</p>
+    <div class="izbori" id="lek-nacin" role="group" aria-labelledby="lek-nacin-ime"></div>
+  </div>
+
+  <div class="polje">
+    <p class="polje__ime" id="lek-raspored-ime">Kada se uzima</p>
+    <div class="izbori" id="lek-raspored" role="group" aria-labelledby="lek-raspored-ime"></div>
   </div>
 
   <div id="lek-dodatno"></div>
@@ -363,7 +379,7 @@
     <input class="unos" id="primena-datum" type="date">
   </div>
 
-  <div class="polje">
+  <div class="polje" id="primena-mesto-polje">
     <p class="polje__ime" id="primena-mesto-ime">Mesto primene</p>
     <p class="polje__opis" id="primena-predlog"></p>
     <div class="izbori" id="primena-mesto" role="group" aria-labelledby="primena-mesto-ime"></div>

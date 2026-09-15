@@ -17,10 +17,15 @@ import {
   kljucDana, pomeriDan, jeBuducnost, imeDana, pripremi, upisiSada, stanjeCuvanja
 } from './skladiste.js';
 import { sacuvajKopiju, trebaPodsetiti, odloziPodsetnik } from './kopija.js';
+import { migrirajLekove } from './lekovi.js';
 
 /* Podaci se učitavaju pre prvog iscrtavanja: ekran dana bez njih ne bi imao
    šta da pokaže, a IndexedDB se otvara asinhrono. */
 await pripremi();
+
+/* Lekovi uneti u ranijoj verziji imaju staru podelu na vrste; prevode se na
+   raspored + način pre nego što ijedan ekran pokuša da ih pročita. */
+migrirajLekove();
 
 const ekrani = {
   dan: document.getElementById('ekran-dan'),
@@ -119,6 +124,7 @@ const ekranDana = napraviEkranDana({
     ekranUnosa.osveziMapu();
   },
   naJavljanje: javi,
+  naLekove: () => { ekranLekova.iscrtaj(tekuciDan); prikazi('lekovi'); },
   naPromenuDana: (koliko) => {
     const novi = koliko === 'danas' ? kljucDana() : pomeriDan(tekuciDan, koliko);
     if (jeBuducnost(novi)) return;

@@ -14,7 +14,10 @@ import {
 } from './skladiste.js';
 import { poljaZa, ispisi } from './polja.js';
 import { imeRegiona } from './telo/regioni.js';
-import { lekovi, lek, uzimanjaDana, primeneLeka, VRSTE, NACINI, MESTA, REAKCIJE } from './lekovi.js';
+import {
+  lekovi, lek, uzimanjaDana, primeneLeka, opisRasporeda, beleziPrimenu,
+  NACINI, MESTA, REAKCIJE
+} from './lekovi.js';
 
 const DANI = ['nedelja', 'ponedeljak', 'utorak', 'sreda', 'četvrtak', 'petak', 'subota'];
 const BOM = '﻿';
@@ -77,7 +80,7 @@ export function dnevnikUTabelu() {
 /* ── lekovi ──────────────────────────────────────────────────────────── */
 
 const ZAGLAVLJE_LEKOVA = [
-  'Datum', 'Lek', 'Doza', 'Vrsta', 'Događaj', 'Vreme',
+  'Datum', 'Lek', 'Doza', 'Raspored', 'Događaj', 'Vreme',
   'Način primene', 'Mesto primene', 'Reakcija', 'Beleška'
 ];
 
@@ -91,13 +94,14 @@ export function lekoviUTabelu() {
     for (const u of uzimanjaDana(k)) {
       const l = lek(u.lekId);
       if (!l) continue;
-      zapisi.push([k, l.naziv, l.doza ?? '', imeIz(VRSTE, l.vrsta), 'uzet', u.vreme ?? '', '', '', '', '']);
+      zapisi.push([k, l.naziv, l.doza ?? '', opisRasporeda(l), 'uzet', u.vreme ?? '',
+                   imeIz(NACINI, l.nacin), '', '', '']);
     }
   }
-  for (const l of lekovi().filter(x => x.vrsta === 'bioloska')) {
+  for (const l of lekovi().filter(beleziPrimenu)) {
     for (const p of primeneLeka(l.id)) {
       zapisi.push([
-        p.datum, l.naziv, l.doza ?? '', imeIz(VRSTE, l.vrsta), 'primena', '',
+        p.datum, l.naziv, l.doza ?? '', opisRasporeda(l), 'primena', '',
         imeIz(NACINI, l.nacin), imeIz(MESTA, p.mesto), imeIz(REAKCIJE, p.reakcija), p.beleska ?? ''
       ]);
     }
@@ -154,6 +158,6 @@ export function brojRedova() {
     for (const deo of DELOVI) if (dohvatiDan(k)[deo.id]) unosa++;
   }
   const lekova = Object.keys(sviDani()).reduce((z, k) => z + uzimanjaDana(k).length, 0)
-    + lekovi().filter(l => l.vrsta === 'bioloska').reduce((z, l) => z + primeneLeka(l.id).length, 0);
+    + lekovi().filter(beleziPrimenu).reduce((z, l) => z + primeneLeka(l.id).length, 0);
   return { unosa, lekova };
 }

@@ -19,9 +19,11 @@ const KLJUC = 'artron.v1';
 const VERZIJA = 1;
 
 export const DELOVI = [
-  { id: 'jutro', ime: 'Jutro', opis: 'Kako je počeo dan' },
-  { id: 'podne', ime: 'Podne', opis: 'Sredina dana' },
-  { id: 'vece',  ime: 'Veče',  opis: 'Kraj dana' }
+  /* `kaoRanije` je kako se taj deo pominje kad se iz njega prepisuje unos —
+     „Kao podnes" nije srpski, pa se ne sklapa od imena nego stoji ispisano. */
+  { id: 'jutro', ime: 'Jutro', opis: 'Kako je počeo dan', kaoRanije: 'Kao jutros' },
+  { id: 'podne', ime: 'Podne', opis: 'Sredina dana',      kaoRanije: 'Kao popodne' },
+  { id: 'vece',  ime: 'Veče',  opis: 'Kraj dana',         kaoRanije: 'Kao sinoć' }
 ];
 
 const PODRAZUMEVANI_REZIM = { upalni: false, fibro: false };
@@ -184,6 +186,60 @@ export function poslednjiUnos(deo, preKljuca) {
     if (dani[k][deo]) return { kljuc: k, unos: dani[k][deo] };
   }
   return null;
+}
+
+/**
+ * Odakle prepisati unos, i kako to nazvati.
+ *
+ * Raniji deo istog dana ima prednost nad istim delom prethodnog dana: kod
+ * hroničnog bola su jutros i popodne bliži jedno drugom nego dva jutra.
+ */
+/**
+ * Regioni koje korisnik najčešće označava, najčešći prvi.
+ *
+ * Hronični bol pogađa istih nekoliko mesta iz dana u dan, pa kratak red tih
+ * mesta štedi okretanje modela. Gleda se poslednjih `dana` dana da spisak
+ * prati stanje, a ne ono što je bolelo pre godinu dana.
+ */
+export function cestiRegioni(koliko = 6, dana = 60) {
+  const dani = ucitaj().dani;
+  const od = pomeriDan(kljucDana(), -dana);
+  const broj = new Map();
+
+  for (const [k, dan] of Object.entries(dani)) {
+    if (k < od) continue;
+    for (const d of DELOVI) {
+      for (const id of Object.keys(dan[d.id]?.regioni ?? {})) {
+        broj.set(id, (broj.get(id) ?? 0) + 1);
+      }
+    }
+  }
+
+  return [...broj.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, koliko)
+    .map(([id, puta]) => ({ id, puta }));
+}
+
+export function izvorZaPrepis(kljuc, deo) {
+  const dan = ucitaj().dani[kljuc] ?? {};
+  const redom = DELOVI.map(d => d.id);
+  const doOvog = redom.slice(0, redom.indexOf(deo));
+
+  for (const raniji of doOvog.reverse()) {
+    if (dan[raniji]) {
+      return { kljuc, deo: raniji, unos: dan[raniji],
+               opis: DELOVI.find(d => d.id === raniji).kaoRanije };
+    }
+  }
+
+  const p = poslednjiUnos(deo, kljuc);
+  if (!p) return null;
+  const kada = imeDana(p.kljuc);
+  return {
+    ...p, deo,
+    opis: kada === 'juče' || kada === 'danas' ? `Kao ${kada}` : `Kao ${punDatum(p.kljuc)}`
+  };
 }
 
 export function upisiUnos(kljuc, deo, unos) {

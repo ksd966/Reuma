@@ -12,9 +12,10 @@ import {
   sviDani
 } from './skladiste.js';
 import { poljaZa, ispisi } from './polja.js';
+import { naReduNa, postaviBrojUzimanja, beleziPrimenu } from './lekovi.js';
 import { stepenZa } from './telo/regioni.js';
 
-export function napraviEkranDana({ naIzborDela, naPromenuDana, naJavljanje }) {
+export function napraviEkranDana({ naIzborDela, naPromenuDana, naJavljanje, naLekove }) {
   const elIme = document.getElementById('dan-ime');
   const elDatum = document.getElementById('dan-datum');
   const elNazad = document.getElementById('dan-nazad');
@@ -26,6 +27,8 @@ export function napraviEkranDana({ naIzborDela, naPromenuDana, naJavljanje }) {
   const elNaDanas = document.getElementById('na-danas');
   const elBezBolova = document.getElementById('bez-bolova');
   const elBezBolovaPod = document.getElementById('bez-bolova-pod');
+  const elLekovi = document.getElementById('danas-lekovi');
+  const elLekoviSpisak = document.getElementById('danas-lekovi-spisak');
 
   let kljuc = null;
 
@@ -43,6 +46,7 @@ export function napraviEkranDana({ naIzborDela, naPromenuDana, naJavljanje }) {
     elNaDanas.hidden = jeDanas(kljuc);
 
     osveziBezBolova();
+    osveziLekove();
     /* Dok dnevnik nema nijedan unos, mora da se kaže šta se radi: mapa tela
        stoji iza dodira na polje, a sitno „+ dodaj" to ne nagoveštava. */
     elUvod.hidden = imaIkakvihUnosa();
@@ -53,6 +57,50 @@ export function napraviEkranDana({ naIzborDela, naPromenuDana, naJavljanje }) {
 
   /* Dugme puni samo prazne delove dana koji su već stigli — o veču se u devet
      ujutru ne može ništa reći. */
+  /* ── lekovi za ovaj dan ───────────────────────────────────────────── */
+
+  /**
+   * Ono što je po rasporedu na redu, odmah ovde — da se za potvrdu jedne
+   * tablete ne odlazi na poseban ekran. Nedeljni lekovi se pojavljuju samo
+   * svog dana, pa spisak ostaje kratak.
+   */
+  function osveziLekove() {
+    const red = naReduNa(kljuc);
+    elLekovi.hidden = !red.length;
+    if (!red.length) return;
+
+    elLekoviSpisak.replaceChildren(...red.map(({ lek: l, redni: redniBroj, vreme, uzeto, kasni }) => {
+      const d = document.createElement('button');
+      d.type = 'button';
+      d.className = 'doza doza--zbijena';
+      d.dataset.uzeto = uzeto ? 'da' : 'ne';
+      if (kasni && !uzeto) d.dataset.kasni = 'da';
+      d.setAttribute('aria-pressed', String(uzeto));
+
+      const pod = [l.doza, vreme, kasni && !uzeto ? 'kasni' : null].filter(Boolean).join(' · ');
+      d.innerHTML = `
+        <span class="doza__kvadrat" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#14171A"
+               stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 12.5 L9.5 18 L20 6.5"/>
+          </svg>
+        </span>
+        <span class="doza__tekst">
+          <span class="doza__ime">${l.naziv}</span>
+          <span class="doza__pod">${pod}</span>
+        </span>`;
+
+      d.addEventListener('click', () => {
+        /* Injekcija nosi mesto i reakciju — to se unosi na ekranu Lekovi. */
+        if (beleziPrimenu(l)) { naLekove?.(l.id); return; }
+        postaviBrojUzimanja(l.id, kljuc, uzeto ? redniBroj : redniBroj + 1);
+        osveziLekove();
+        naJavljanje?.(uzeto ? `Poništeno — ${l.naziv}` : `Uzeto — ${l.naziv}`);
+      });
+      return d;
+    }));
+  }
+
   function osveziBezBolova() {
     const prazni = praznoAStiglo(kljuc);
     const imena = prazni.map(id => DELOVI.find(d => d.id === id).ime.toLowerCase());
