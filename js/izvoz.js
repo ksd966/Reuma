@@ -10,9 +10,8 @@
  */
 
 import {
-  DELOVI, sviDani, dohvatiDan, izKljuca, kljucDana, brojOteklih
+  DELOVI, sviDani, dohvatiDan, izKljuca, kljucDana
 } from './skladiste.js';
-import { poljaZa, ispisi } from './polja.js';
 import { imeRegiona } from './telo/regioni.js';
 import {
   lekovi, lek, uzimanjaDana, primeneLeka, opisRasporeda, beleziPrimenu,

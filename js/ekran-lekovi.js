@@ -13,6 +13,7 @@ import {
   naReduNa, opisRasporeda, beleziPrimenu, beleziMesto
 } from './lekovi.js';
 import { napraviKalendar, imeKalendara, brojPodsetnika } from './kalendar.js';
+import { napraviSklopivo } from './sklopivo.js';
 import { posaljiDatoteku } from './izvoz.js';
 import { bolPoDanuCiklusa } from './statistika.js';
 import { punDatum, imeDana, jeDanas, kljucDana } from './skladiste.js';
@@ -71,7 +72,18 @@ export function napraviEkranLekova({ naOtvaranjeLeka, naJavljanje, naIzmenu }) {
     for (const l of svi) {
       deca.push(karticaBioloske(l));
       const g = grafikCiklusa(l);
-      if (g) deca.push(g);
+      /* Grafik je prikaz za lekara — gleda se pred kontrolu, ne svakog dana. */
+      if (g) {
+        const sk = napraviSklopivo({
+          ime: 'Bol u odnosu na dan ciklusa',
+          pod: svi.length > 1 ? l.naziv : 'prosek po danu ciklusa',
+          pamtiKao: `ciklus.${l.id}`
+        });
+        sk.sadrzaj.appendChild(g);
+        const okvir = document.createElement('div');
+        okvir.appendChild(sk.okvir);
+        deca.push(okvir);
+      }
     }
     return odeljak('Odbrojavanje', deca);
   }
@@ -95,8 +107,8 @@ export function napraviEkranLekova({ naOtvaranjeLeka, naJavljanje, naIzmenu }) {
       const kasni = o.preostalo < 0;
       if (kasni) k.classList.add('bioloska__kasni');
       const udeo = Math.max(0, Math.min(100, (o.danCiklusa / o.ciklus) * 100));
-      const sledece = sledeceMesto(l.id);
-      const mestoPoslednje = MESTA.find(m => m.id === o.poslednja.mesto)?.ime ?? '—';
+      /* Prethodno i sledeće mesto se ovde ne pišu: ponavljala su ono što list
+         za primenu ionako kaže, u trenutku kad se mesto zaista bira. */
 
       k.innerHTML = `
         <p class="bioloska__ime">${l.naziv}</p>
@@ -109,13 +121,8 @@ export function napraviEkranLekova({ naOtvaranjeLeka, naJavljanje, naIzmenu }) {
             : `${danaRec(o.preostalo)} do sledeće`}</span>
         </p>
         <span class="bioloska__traka" aria-hidden="true"><i style="width:${udeo}%"></i></span>
-        <dl class="bioloska__podaci">
-          <div><dt>Poslednja primena</dt><dd>${punDatum(o.poslednja.datum)}</dd></div>
-          <div><dt>Sledeća</dt><dd>${punDatum(o.sledeci)}</dd></div>
-          <div><dt>Dan ciklusa</dt><dd class="tabular">${o.danCiklusa} od ${o.ciklus}</dd></div>
-          <div><dt>Prethodno mesto</dt><dd>${mestoPoslednje}</dd></div>
-          <div style="grid-column:1/3"><dt>Sledeće mesto po redu</dt><dd>${sledece.ime}</dd></div>
-        </dl>`;
+        <p class="bioloska__red">Poslednja ${punDatum(o.poslednja.datum)} ·
+          sledeća ${punDatum(o.sledeci)} · dan ${o.danCiklusa} od ${o.ciklus}</p>`;
     }
 
     const dugme = document.createElement('button');
@@ -125,14 +132,6 @@ export function napraviEkranLekova({ naOtvaranjeLeka, naJavljanje, naIzmenu }) {
     dugme.textContent = 'Zabeleži primenu';
     dugme.addEventListener('click', () => otvoriPrimenu(l));
     k.appendChild(dugme);
-
-    const izmeni = document.createElement('button');
-    izmeni.type = 'button';
-    izmeni.className = 'dugme dugme--tiho';
-    izmeni.style.cssText = 'width:100%;margin-top:8px';
-    izmeni.textContent = 'Izmeni lek';
-    izmeni.addEventListener('click', () => naOtvaranjeLeka(l.id));
-    k.appendChild(izmeni);
 
     return k;
   }
@@ -328,12 +327,10 @@ export function napraviEkranLekova({ naOtvaranjeLeka, naJavljanje, naIzmenu }) {
     const opis = document.createElement('p');
     opis.className = 'podsetnici__opis';
     opis.textContent = koliko
-      ? 'Artron napravi datoteku sa rasporedom koji ste ovde uneli. Otvorite je ' +
-        'i telefon je doda u Kalendar, pa dalje podseća sam — i kad Artron nije ' +
-        'otvoren. Ništa ne ide na internet.'
-      : 'Podsetnici se prave od rasporeda koji unesete: stalnim lekovima zadajte ' +
-        'vreme uzimanja, a kod biološke zabeležite bar jednu primenu da bi se ' +
-        'znalo kad je sledeća.';
+      ? 'Telefon dalje podseća sam, i kad Artron nije otvoren. ' +
+        'Ništa ne ide na internet.'
+      : 'Zadajte vreme uzimanja, a kod leka u ciklusu zabeležite bar jednu ' +
+        'primenu — tek tada se zna kad je sledeća.';
     okvir.appendChild(opis);
 
     const dugme = document.createElement('button');
@@ -359,7 +356,19 @@ export function napraviEkranLekova({ naOtvaranjeLeka, naJavljanje, naIzmenu }) {
         ` u datoteci ${gotovo}.${preskoceno}`;
     });
 
-    return odeljak('Podsetnici', [okvir]);
+    const sk = napraviSklopivo({
+      ime: 'Podsetnici u Kalendar',
+      pod: koliko
+        ? `${koliko} ${koliko === 1 ? 'podsetnik' : koliko < 5 ? 'podsetnika' : 'podsetnika'} iz rasporeda`
+        : 'još nema rasporeda od kog bi se napravili',
+      pamtiKao: 'lekovi.podsetnici'
+    });
+    sk.sadrzaj.appendChild(okvir);
+
+    const spolja = document.createElement('section');
+    spolja.className = 'lek-odeljak';
+    spolja.appendChild(sk.okvir);
+    return spolja;
   }
 
   function odeljakSvi() {
@@ -375,7 +384,21 @@ export function napraviEkranLekova({ naOtvaranjeLeka, naJavljanje, naIzmenu }) {
       b.addEventListener('click', () => naOtvaranjeLeka(l.id));
       return b;
     });
-    return odeljak('Svi lekovi', deca);
+
+    /* Spisak je za podešavanje terapije, ne za svakodnevnu upotrebu — sve što
+       je danas na redu stoji gore, otvoreno. */
+    const n = deca.length;
+    const sk = napraviSklopivo({
+      ime: 'Svi lekovi',
+      pod: `${n} ${n === 1 ? 'lek' : n < 5 ? 'leka' : 'lekova'} · izmena i sklanjanje`,
+      pamtiKao: 'lekovi.svi'
+    });
+    sk.sadrzaj.append(...deca);
+
+    const okvir = document.createElement('section');
+    okvir.className = 'lek-odeljak';
+    okvir.appendChild(sk.okvir);
+    return okvir;
   }
 
   /* ── list za primenu biološke ─────────────────────────────────────── */

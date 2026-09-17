@@ -124,6 +124,7 @@ Izmereno na dva meseca unosa sa oba režima uključena:
 |---|---|---|
 | Unos | 3,9 → **2,3** | 65 → **28** |
 | Dnevnik | 7,7 → **1,0** | — |
+| Lekovi | 3,2 → **2,1** | 13 → **10** |
 
 **Unos** je nosio skelu koja je korisna prvih par dana pa zauvek zauzima mesto:
 legenda boja, legenda oblika i uputstvo za okretanje modela. Sada stoje iza
@@ -137,6 +138,18 @@ ništa nije izgubljeno bez razvijanja pet pitanja i dve table brojeva.
 oko 45 ekrana skrolovanja. Sada je podrazumevani prikaz mesec: mreža dana, svaki
 obojen po prosečnom bolu i sa upisanim brojem, dodir otvara taj dan. Spisak je
 ostao kao drugi prikaz.
+
+**Lekovi** drže otvoreno samo ono što je danas na redu i lek po potrebi.
+Odbrojavanje je izgubilo mrežu od pet polja — prethodno i sledeće mesto uboda
+su ponavljali ono što list za primenu ionako kaže, u trenutku kad se mesto
+zaista bira; ostatak stoji u jednom redu. Grafik ciklusa, spisak svih lekova i
+podsetnici su sklopljeni: to je pregled i podešavanje, ne svakodnevna upotreba.
+
+Sklapanje je sada jedna komponenta (`js/sklopivo.js`). Na nju su prevedeni i
+spisak regiona i „Još pitanja", koji su do tada bili prepisani rukom — jedan u
+HTML-u, drugi u JavaScriptu. Odeljci koji to traže pamte stanje u
+`localStorage`; to je udobnost ovog telefona, ne podatak, pa ne ide u dnevnik
+koji se izvozi i u kopiju.
 
 **Ekran Dan** kaže i šta preostaje, ne samo šta je zabeleženo: linija „Ostalo
 danas" nabraja unose koji su stigli a nisu popunjeni i lekove koji su na redu a
@@ -339,6 +352,7 @@ css/ekrani.css          pregled dana i unos
 js/app.js               pokretanje i prelaz između ekrana
 js/skladiste.js         stanje, datumi, izvedene mere, izvoz i uvoz
 js/skala.js             tabla brojeva 0–10, zajednička za sve mere
+js/sklopivo.js          sklopiv odeljak koji pamti da li je otvoren
 js/trajnost.js          IndexedDB, trajno skladište, stanje čuvanja
 js/kopija.js            čuvanje u datoteku i vraćanje iz nje
 js/polja.js             šta se pita uz koji deo dana, po režimu

@@ -13,6 +13,7 @@ import { REGIONI, GRUPE, PO_ID, stepenZa } from './telo/regioni.js';
 /* Ista boja kao na mapi tela za zglob koji je otečen a ne boli. */
 const BOJA_OTEKLINE = '#5A6FD6';
 import { poljaZa, ispisi } from './polja.js';
+import { napraviSklopivo } from './sklopivo.js';
 import { napraviSkalu, recZaJacinu, recZaMeru } from './skala.js';
 import {
   DELOVI, dohvatiUnos, upisiUnos, obrisiUnos, imeDana, punDatum, sadaHHMM, rezim,
@@ -21,7 +22,16 @@ import {
 
 export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
   const elDodatna = document.getElementById('dodatna');
-  const elSpisak = document.getElementById('spisak');
+  /* Spisak svih 36 regiona: isti unos bez okretanja modela, i put kojim čitač
+     ekrana dolazi do svih regiona. Sklopljen je dok ne zatreba. */
+  const spisakSklopivo = napraviSklopivo({
+    id: 'spisak',
+    ime: 'Svi regioni — spisak',
+    pod: 'Isti unos bez okretanja modela; ovuda ide i čitač ekrana'
+  });
+  const elSpisak = spisakSklopivo.sadrzaj;
+  elSpisak.classList.add('spisak');
+  document.getElementById('spisak-okvir').appendChild(spisakSklopivo.okvir);
   const elPogledi = document.getElementById('pogledi');
   const elBolBroj = document.getElementById('bol-broj');
   const elBolRec = document.getElementById('bol-rec');
@@ -35,21 +45,14 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
   const elPrepisi = document.getElementById('prepisi');
   const elPrepisiIme = document.getElementById('prepisi-ime');
   const elPrepisiPod = document.getElementById('prepisi-pod');
-  const elSpisakPrekidac = document.getElementById('spisak-prekidac');
+  const elSpisakPrekidac = spisakSklopivo.dugme;
   const elCesti = document.getElementById('cesti');
   const elCestiRed = document.getElementById('cesti-red');
 
   /* Spisak od 36 regiona je sklopljen: razvučen, gurao je dugme za čuvanje i
      ostatak pitanja daleko nadole. */
-  elSpisakPrekidac.addEventListener('click', () => {
-    const otvoren = elSpisakPrekidac.getAttribute('aria-expanded') === 'true';
-    elSpisakPrekidac.setAttribute('aria-expanded', String(!otvoren));
-    elSpisak.hidden = otvoren;
-  });
-
   let kljuc = null, deo = null, dodatnaVrednost = {};
   let bolRucno = false;          // da li je korisnik sam dirao ukupnu jačinu
-  let dodatnaOtvorena = false;   // „Još pitanja" ostaje sklopljeno dok ne zatreba
 
   /* Legenda i uputstvo su korisni prvih par dana, pa onda samo zauzimaju
      trećinu ekrana na svakom unosu. Izbor se pamti za sledeći put. */
@@ -260,34 +263,12 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
 
     /* Sažetak već odgovorenog stoji na samoj liniji, pa se vidi da ništa nije
        izgubljeno — bez razvijanja pet pitanja i dve table brojeva. */
-    const odgovoreno = polja
-      .map(polje => ispisi(polje.id, dodatnaVrednost[polje.id]))
-      .filter(Boolean);
-
-    const prekidac = document.createElement('button');
-    prekidac.type = 'button';
-    prekidac.className = 'sklopivo';
-    prekidac.id = 'dodatna-prekidac';
-    prekidac.setAttribute('aria-expanded', String(dodatnaOtvorena));
-    prekidac.setAttribute('aria-controls', 'dodatna-polja');
-    prekidac.innerHTML = `
-      <span class="sklopivo__ime">Još pitanja (${polja.length})</span>
-      <span class="sklopivo__pod">${
-        odgovoreno.length ? odgovoreno.join(' · ') : DELOVI.find(d => d.id === deo).opis}</span>
-      <svg class="sklopivo__strelica" viewBox="0 0 24 24" aria-hidden="true" width="20" height="20"
-           fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M5 9 L12 16 L19 9"/>
-      </svg>`;
-
-    const okvir = document.createElement('div');
-    okvir.id = 'dodatna-polja';
-    okvir.hidden = !dodatnaOtvorena;
-
-    prekidac.addEventListener('click', () => {
-      dodatnaOtvorena = !dodatnaOtvorena;
-      prekidac.setAttribute('aria-expanded', String(dodatnaOtvorena));
-      okvir.hidden = !dodatnaOtvorena;
+    const sk = napraviSklopivo({
+      id: 'dodatna-polja',
+      ime: `Još pitanja (${polja.length})`,
+      pod: sazetakPolja(polja)
     });
+    const okvir = sk.sadrzaj;
 
     const crtaci = {
       izbor: poljeIzbor,
@@ -298,19 +279,21 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
     for (const polje of polja) {
       okvir.appendChild((crtaci[polje.vrsta] ?? poljeMere)(polje));
     }
-    elDodatna.append(prekidac, okvir);
+    elDodatna.appendChild(sk.okvir);
+  }
+
+  /** Šta je već odgovoreno — stoji na liniji prekidača. */
+  function sazetakPolja(polja = poljaZa(deo, rezim())) {
+    const odgovoreno = polja
+      .map(polje => ispisi(polje.id, dodatnaVrednost[polje.id]))
+      .filter(Boolean);
+    return odgovoreno.length ? odgovoreno.join(' · ') : DELOVI.find(d => d.id === deo).opis;
   }
 
   /** Sažetak na liniji „Još pitanja" prati odgovore i dok su polja otvorena. */
   function osveziSazetak() {
-    const pod = elDodatna.querySelector('#dodatna-prekidac .sklopivo__pod');
-    if (!pod) return;
-    const odgovoreno = poljaZa(deo, rezim())
-      .map(polje => ispisi(polje.id, dodatnaVrednost[polje.id]))
-      .filter(Boolean);
-    pod.textContent = odgovoreno.length
-      ? odgovoreno.join(' · ')
-      : DELOVI.find(d => d.id === deo).opis;
+    const pod = elDodatna.querySelector('.sklopivo__pod');
+    if (pod) pod.textContent = sazetakPolja();
   }
 
   /** Da/ne, sa trećim mogućim stanjem — neodgovoreno. */
@@ -475,7 +458,6 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
 
     /* Ne otvara se samo ni kad odgovori postoje — oni stoje ispisani na
        liniji prekidača, pa se vidi da su tu, a ekran ostaje kratak. */
-    dodatnaOtvorena = false;
 
     mapa.ocistiSve();
     for (const r of REGIONI) osveziRegion(r.id);
@@ -497,8 +479,7 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
 
     elLegendaOblik.hidden = !rezim().upalni;
     elObrisi.hidden = !unos;
-    elSpisakPrekidac.setAttribute('aria-expanded', 'false');
-    elSpisak.hidden = true;
+    if (spisakSklopivo.jeOtvoren()) elSpisakPrekidac.click();   // uvek kreće sklopljen
     scrollTo(0, 0);
   }
 

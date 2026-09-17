@@ -9,8 +9,7 @@
  */
 
 import {
-  DELOVI, dohvatiDan, sviDani, imeDana, punDatum, izKljuca, kljucDana, jeBuducnost,
-  brojRegiona, brojOteklih, rezim
+  DELOVI, dohvatiDan, sviDani, imeDana, punDatum, izKljuca, kljucDana, jeBuducnost, rezim
 } from './skladiste.js';
 import { sazetakDana } from './statistika.js';
 import { poljaZa, ispisi } from './polja.js';

@@ -413,12 +413,10 @@ input[type="time"].unos,input[type="date"].unos{
 }
 .bioloska__rec{color:var(--muted);font-size:14px}
 .bioloska__kasni .bioloska__broj{color:var(--s-serious)}
-.bioloska__podaci{
-  display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;margin-top:14px;
-  padding-top:13px;border-top:1px solid var(--line);
+.bioloska__red{
+  color:var(--muted);font-size:12.5px;line-height:1.55;
+  margin-top:11px;padding-top:10px;border-top:1px solid var(--line);
 }
-.bioloska__podaci dt{color:var(--dim);font-size:11px;text-transform:uppercase;letter-spacing:.07em}
-.bioloska__podaci dd{font-size:14px;margin-top:2px;line-height:1.35}
 .bioloska__traka{
   height:6px;border-radius:99px;background:var(--surface-2);overflow:hidden;margin-top:12px;
 }
@@ -493,11 +491,7 @@ body[data-dno="da"] .strana{padding-bottom:calc(78px + var(--safe-bottom))}
 }
 
 /* ── podsetnici u kalendar ──────────────────────────────────────────── */
-.podsetnici{
-  padding:16px;
-  border:1px solid var(--ivica-kartice);border-radius:var(--radius);
-  background:var(--surface);box-shadow:var(--dizanje);
-}
+.podsetnici{padding:12px 2px 4px}
 .podsetnici__opis{color:var(--muted);font-size:13.5px;line-height:1.55;margin-bottom:13px}
 .podsetnici .dugme{width:100%;background:var(--kontrola);border:1px solid var(--line-strong)}
 .podsetnici .dugme:disabled{opacity:.4}
@@ -557,11 +551,7 @@ body[data-dno="da"] .strana{padding-bottom:calc(78px + var(--safe-bottom))}
 .sklopivo[aria-expanded="true"]{
   border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom-color:transparent;
 }
-.sklopivo[aria-expanded="true"] + .spisak{
-  border:1px solid var(--line);border-top:none;
-  border-radius:0 0 var(--radius) var(--radius);
-  padding:4px 14px 14px;margin-top:0;
-}
+
 
 /* ── lekovi na ekranu dana ──────────────────────────────────────────── */
 .danas-lekovi{margin-top:18px}
@@ -650,3 +640,13 @@ body[data-dno="da"] .strana{padding-bottom:calc(78px + var(--safe-bottom))}
   display:flex;align-items:center;justify-content:center;
   font-size:10.5px;font-weight:700;color:var(--na-jacini);line-height:1}
 .mesec-zbir{color:var(--muted);font-size:13px;line-height:1.55;margin-top:14px}
+
+/* Sadržaj sklopivog odeljka nastavlja karticu naslova — bez šava između njih. */
+.sklopivo[aria-expanded="true"] + .sklopivo__sadrzaj{
+  border:1px solid var(--line-strong);border-top:none;
+  border-radius:0 0 var(--radius) var(--radius);
+  background:var(--kontrola);
+  padding:4px 14px 14px;margin-top:0;margin-bottom:10px;
+}
+.sklopivo__sadrzaj > .izv-blok:first-child,
+.sklopivo__sadrzaj > .lek-red:first-child{margin-top:10px}
