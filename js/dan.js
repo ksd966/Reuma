@@ -13,7 +13,7 @@ import {
 } from './skladiste.js';
 import { poljaZa, ispisi } from './polja.js';
 import { naReduNa, postaviBrojUzimanja, beleziPrimenu } from './lekovi.js';
-import { stepenZa } from './telo/regioni.js';
+import { stepenZa, PO_ID } from './telo/regioni.js';
 
 export function napraviEkranDana({ naIzborDela, naPromenuDana, naJavljanje, naLekove }) {
   const elIme = document.getElementById('dan-ime');
@@ -29,6 +29,7 @@ export function napraviEkranDana({ naIzborDela, naPromenuDana, naJavljanje, naLe
   const elBezBolovaPod = document.getElementById('bez-bolova-pod');
   const elLekovi = document.getElementById('danas-lekovi');
   const elLekoviSpisak = document.getElementById('danas-lekovi-spisak');
+  const elOstalo = document.getElementById('ostalo');
 
   let kljuc = null;
 
@@ -47,6 +48,7 @@ export function napraviEkranDana({ naIzborDela, naPromenuDana, naJavljanje, naLe
 
     osveziBezBolova();
     osveziLekove();
+    osveziOstalo();
     /* Dok dnevnik nema nijedan unos, mora da se kaže šta se radi: mapa tela
        stoji iza dodira na polje, a sitno „+ dodaj" to ne nagoveštava. */
     elUvod.hidden = imaIkakvihUnosa();
@@ -55,8 +57,25 @@ export function napraviEkranDana({ naIzborDela, naPromenuDana, naJavljanje, naLe
     iscrtajZbir();
   }
 
-  /* Dugme puni samo prazne delove dana koji su već stigli — o veču se u devet
-     ujutru ne može ništa reći. */
+  /**
+   * Jedna linija sa onim što danas još nije urađeno — unosi koji su stigli a
+   * nisu popunjeni, i lekovi koji su na redu a nisu potvrđeni.
+   *
+   * Bez nje ekran kaže samo šta je zabeleženo, pa se ne vidi šta preostaje.
+   */
+  function osveziOstalo() {
+    if (!jeDanas(kljuc)) { elOstalo.hidden = true; return; }
+
+    const unosi = praznoAStiglo(kljuc).map(id => DELOVI.find(d => d.id === id).ime.toLowerCase());
+    const lekovi = naReduNa(kljuc).filter(r => !r.uzeto).map(r => r.lek.naziv);
+    const jedinstveni = [...new Set(lekovi)];
+    const delovi = [...unosi, ...jedinstveni];
+
+    elOstalo.hidden = !delovi.length;
+    if (!delovi.length) return;
+    elOstalo.textContent = `Ostalo danas: ${delovi.join(' · ')}`;
+  }
+
   /* ── lekovi za ovaj dan ───────────────────────────────────────────── */
 
   /**
@@ -80,7 +99,7 @@ export function napraviEkranDana({ naIzborDela, naPromenuDana, naJavljanje, naLe
       const pod = [l.doza, vreme, kasni && !uzeto ? 'kasni' : null].filter(Boolean).join(' · ');
       d.innerHTML = `
         <span class="doza__kvadrat" aria-hidden="true">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#14171A"
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="var(--na-jacini)"
                stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M4 12.5 L9.5 18 L20 6.5"/>
           </svg>
@@ -101,13 +120,16 @@ export function napraviEkranDana({ naIzborDela, naPromenuDana, naJavljanje, naLe
     }));
   }
 
+  /* Dugme puni samo prazne delove dana koji su već stigli — o veču se u devet
+     ujutru ne može ništa reći. */
   function osveziBezBolova() {
     const prazni = praznoAStiglo(kljuc);
+    /* Kad nema šta da upiše, dugme se sklanja umesto da stoji ugašeno —
+       ugašeno dugme i dalje zauzima mesto i traži da se pročita. */
+    elBezBolova.hidden = prazni.length === 0;
+    if (!prazni.length) return;
     const imena = prazni.map(id => DELOVI.find(d => d.id === id).ime.toLowerCase());
-    elBezBolova.disabled = prazni.length === 0;
-    elBezBolovaPod.textContent = prazni.length === 0
-      ? 'sve je već uneto za ovaj dan'
-      : `upisuje nulu za: ${imena.join(', ')}`;
+    elBezBolovaPod.textContent = `upisuje nulu za: ${imena.join(', ')}`;
   }
 
   elBezBolova.addEventListener('click', () => {
@@ -168,10 +190,16 @@ export function napraviEkranDana({ naIzborDela, naPromenuDana, naJavljanje, naLe
     const dno = document.createElement('div');
     dno.className = 'deo__dno';
     if (unos) {
-      const n = brojRegiona(unos);
+      /* Gde je bolelo govori nešto; „1 region" ne govori ništa. Kad ih ima
+         previše za karticu, poslednja se zamenjuje brojem preostalih. */
+      const imena = Object.keys(unos.regioni ?? {})
+        .map(id => PO_ID.get(id)?.ime).filter(Boolean);
       const regioni = document.createElement('p');
       regioni.className = 'deo__regioni';
-      regioni.textContent = n === 0 ? 'bez regiona' : n === 1 ? '1 region' : `${n} regiona`;
+      regioni.textContent = !imena.length ? 'bez regiona'
+        : imena.length <= 2 ? imena.join(', ')
+        : `${imena.slice(0, 2).join(', ')} +${imena.length - 2}`;
+      if (imena.length) regioni.title = imena.join(', ');
       dno.appendChild(regioni);
       dno.appendChild(meraPopunjenosti(popunjenost(deo.id, unos, rezim())));
     } else {
@@ -260,9 +288,13 @@ export function napraviEkranDana({ naIzborDela, naPromenuDana, naJavljanje, naLe
   function redDetalja(ima) {
     const redovi = ima.map(t => {
       const stavke = poljaZa(t.deo, rezim()).map(p => ispisi(p.id, t.unos[p.id])).filter(Boolean);
-      return stavke.length ? `<b>${t.ime}</b> ${stavke.join(', ')}` : null;
+      /* Svaki deo dana u svom redu. Nanizani jedan za drugim su bili zid
+         skraćenica u kom se nije videlo gde jedan prestaje a drugi počinje. */
+      return stavke.length
+        ? `<div class="tok__red"><b>${t.ime}</b><span>${stavke.join(' · ')}</span></div>`
+        : null;
     }).filter(Boolean);
-    return redovi.length ? `<p class="tok__detalji">${redovi.join('<span> · </span>')}</p>` : '';
+    return redovi.length ? `<div class="tok__detalji">${redovi.join('')}</div>` : '';
   }
 
   /**

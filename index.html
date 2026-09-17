@@ -7,7 +7,7 @@
 <meta name="description" content="Lični dnevnik reumatskih bolova. Sve ostaje na telefonu.">
 
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#14171A">
+<meta name="theme-color" content="#131720">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Artron">
@@ -38,7 +38,7 @@
     </svg>
   </button>
   <svg class="topbar__znak" id="znak" viewBox="0 0 512 512" aria-hidden="true">
-    <rect width="512" height="512" fill="#14171A"/>
+    <rect width="512" height="512" fill="#131720"/>
     <g fill="#F2F2F0">
       <circle cx="197" cy="150" r="57"/><circle cx="315" cy="150" r="57"/>
       <rect x="214" y="146" width="84" height="86"/>
@@ -75,6 +75,8 @@
       </svg>
     </button>
   </nav>
+
+  <p class="ostalo" id="ostalo" hidden role="status"></p>
 
   <h2 class="naslov-odeljka">Tri unosa za ovaj dan</h2>
   <p class="uvod" id="uvod" hidden>
@@ -146,20 +148,27 @@
       <canvas class="mapa__platno" id="platno" aria-hidden="true"></canvas>
       <div class="mapa__oznake" id="oznake"></div>
     </div>
-    <p class="mapa__uputstvo">Prevuci prstom da okreneš telo. Dodirni tačku da uneseš bol.</p>
-
     <div class="pogledi" id="pogledi" role="group" aria-label="Pogled na telo"></div>
 
-    <div class="legenda" aria-hidden="true">
-      <div><i style="background:#2E9E8F"></i>1–3 blaga</div>
-      <div><i style="background:#FAB219"></i>4–6 umerena</div>
-      <div><i style="background:#EC835A"></i>7–8 jaka</div>
-      <div><i style="background:#D03B3B"></i>9–10 vrlo jaka</div>
-    </div>
+    <button class="pomoc-prekidac" id="pomoc-prekidac" type="button"
+            aria-expanded="false" aria-controls="pomoc">
+      <span aria-hidden="true">?</span> Šta znače boje
+    </button>
 
-    <div class="legenda legenda--oblik" id="legenda-oblik" aria-hidden="true" hidden>
-      <div><i class="uzorak-krug"></i>krug — bol</div>
-      <div><i class="uzorak-kvadrat"></i>kvadrat — otečen zglob</div>
+    <div class="pomoc" id="pomoc" hidden>
+      <p class="mapa__uputstvo">Prevuci prstom da okreneš telo. Dodirni tačku da uneseš bol.</p>
+
+      <div class="legenda" aria-hidden="true">
+        <div><i style="background:#2E9E8F"></i>1–3 blaga</div>
+        <div><i style="background:#FAB219"></i>4–6 umerena</div>
+        <div><i style="background:#EC835A"></i>7–8 jaka</div>
+        <div><i style="background:#D03B3B"></i>9–10 vrlo jaka</div>
+      </div>
+
+      <div class="legenda legenda--oblik" id="legenda-oblik" aria-hidden="true" hidden>
+        <div><i class="uzorak-krug"></i>krug — bol</div>
+        <div><i class="uzorak-kvadrat"></i>kvadrat — otečen zglob</div>
+      </div>
     </div>
   </section>
 
@@ -188,6 +197,10 @@
 <!-- ══ EKRAN: DNEVNIK ══════════════════════════════════════════════════ -->
 <section class="ekran strana" id="ekran-dnevnik" hidden aria-labelledby="n-dnev">
   <h1 class="samo-citac" id="n-dnev">Dnevnik</h1>
+  <div class="prikaz" id="dnevnik-prikaz" role="group" aria-label="Kako se prikazuje dnevnik">
+    <button type="button" data-prikaz="mesec" aria-pressed="true">Mesec</button>
+    <button type="button" data-prikaz="spisak" aria-pressed="false">Spisak</button>
+  </div>
   <div id="dnevnik-sadrzaj"></div>
 </section>
 

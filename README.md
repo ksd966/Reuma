@@ -116,6 +116,34 @@ grafiku ostaju kao tanka crtica na osnovi i ne ulaze u prosek, jer bi prosek od
 nepostojećih dana bio izmišljen podatak. Visina stubića nosi jačinu, a boja je
 samo pojačava.
 
+### Šta je skinuto sa ekrana
+
+Izmereno na dva meseca unosa sa oba režima uključena:
+
+| Ekran | Skrolovanja | Kontrola |
+|---|---|---|
+| Unos | 3,9 → **2,3** | 65 → **28** |
+| Dnevnik | 7,7 → **1,0** | — |
+
+**Unos** je nosio skelu koja je korisna prvih par dana pa zauvek zauzima mesto:
+legenda boja, legenda oblika i uputstvo za okretanje modela. Sada stoje iza
+dugmeta „Šta znače boje", a izbor se pamti u `localStorage`.
+
+**Dodatna pitanja** se više ne otvaraju sama kad odgovori postoje — odgovori
+stoje ispisani na liniji prekidača („san: osrednji · umor 4/10"), pa se vidi da
+ništa nije izgubljeno bez razvijanja pet pitanja i dve table brojeva.
+
+**Dnevnik** je bio spisak bez ijednog načina da se nešto nađe — za godinu dana
+oko 45 ekrana skrolovanja. Sada je podrazumevani prikaz mesec: mreža dana, svaki
+obojen po prosečnom bolu i sa upisanim brojem, dodir otvara taj dan. Spisak je
+ostao kao drugi prikaz.
+
+**Ekran Dan** kaže i šta preostaje, ne samo šta je zabeleženo: linija „Ostalo
+danas" nabraja unose koji su stigli a nisu popunjeni i lekove koji su na redu a
+nisu potvrđeni. Kartice pišu gde je bolelo („Leva šaka") umesto „1 region".
+Dugme „Ništa me ne boli" se sklanja kad nema šta da upiše, umesto da stoji
+ugašeno.
+
 ### Raspored leka, a ne „vrsta"
 
 Ranije su lekovi bili podeljeni na stalne, po potrebi i biološke — i ta podela
@@ -197,6 +225,25 @@ Dva tokena nose razliku:
   tamnom je jedva prisutna, jer senka na crnom ne radi ništa.
 
 Bez stakla, blura i sjaja — kako dizajn-sistem traži.
+
+### Paleta
+
+Hrom je hladan — duboko plavo-sivo, meko plavi akcenat. Nije ukus nego posledica:
+boje jačine bola idu od zelene preko žute do crvene, pa je raniji **žuti akcenat
+sedeo tačno na „umerenoj"** (kontrast 1,2 — praktično ista boja). Dugme „Sačuvaj"
+se mešalo sa podatkom. Plavo se ni sa jednom bojom jačine ne meša (3,9 prema
+najbližoj), pa akcenat i podatak više ne mogu da se pobrkaju.
+
+Uz paletu idu i dva tokena koja rešavaju po jednu stvarnu grešku:
+
+- `--na-accentu` — tekst na punom akcentu. Ranije je bio tvrdo upisan `#14171A`,
+  pa je u svetlom režimu davao **tamno na tamnom** (3,8 — ispod praga).
+- `--na-jacini` — tekst na boji jačine ili statusa. Ne menja se sa paletom, jer
+  se ni te boje ne menjaju.
+
+Izuzetak nosi sama boja jačine: tamno na crvenoj daje 3,7, ispod praga za sitan
+tekst, pa `STEPENI` u `js/telo/regioni.js` uz svaku boju nosi i `naBoji` — belo
+na „vrlo jakoj" (4,8), tamno na ostale tri. Sve četiri sada prolaze 4,5.
 
 ### Boje jačine bola
 

@@ -195,6 +195,8 @@ export function napraviMapuTela({ platno, slojOznaka, naDodirRegiona, naPromenuP
         el.textContent = (unos.jacina ?? 0) > 0 ? String(unos.jacina) : '';
         el.dataset.stanje = 'uneto';
         el.style.background = boja;
+        /* Tamno na crvenoj pada ispod praga čitljivosti — otuda boja po jačini. */
+        el.style.color = (unos.jacina ?? 0) > 0 ? stepenZa(unos.jacina).naBoji : '';
       } else {
         el.textContent = '';
         delete el.dataset.stanje;

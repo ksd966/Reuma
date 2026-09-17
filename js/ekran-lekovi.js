@@ -241,7 +241,7 @@ export function napraviEkranLekova({ naOtvaranjeLeka, naJavljanje, naIzmenu }) {
       const pod = [l.doza, vreme, kasni && !uzeto ? 'kasni' : null].filter(Boolean).join(' · ');
       d.innerHTML = `
         <span class="doza__kvadrat" aria-hidden="true">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#14171A"
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="var(--na-jacini)"
                stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M4 12.5 L9.5 18 L20 6.5"/>
           </svg>

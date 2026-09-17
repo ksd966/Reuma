@@ -56,7 +56,7 @@
   opacity:1;
   font-size:13px;font-weight:700;line-height:1;
   font-variant-numeric:tabular-nums;
-  color:#14171A;
+  color:var(--na-jacini);
   box-shadow:0 0 0 2px var(--ground);
 }
 /* Otečen zglob se razlikuje OBLIKOM, ne samo bojom — kvadrat umesto kruga.
@@ -124,7 +124,7 @@
   margin-left:auto;flex:none;
   min-width:22px;height:22px;padding:0 5px;border-radius:99px;
   display:flex;align-items:center;justify-content:center;
-  font-size:12px;font-weight:700;color:#14171A;
+  font-size:12px;font-weight:700;color:var(--na-jacini);
   font-variant-numeric:tabular-nums;
 }
 .spisak__dugme[data-oznacen="da"]{border-color:var(--line-strong);background:var(--surface-2)}
@@ -187,7 +187,7 @@
   border-radius:var(--radius-sm);border:1px solid var(--line-strong);
   background:var(--surface-2);color:var(--text);font-size:16px;font-weight:600;
 }
-.dugme--glavno{background:var(--accent);border-color:var(--accent);color:#14171A}
+.dugme--glavno{background:var(--accent);border-color:var(--accent);color:var(--na-accentu)}
 .dugme--tiho{flex:0 0 auto;padding:0 18px;color:var(--muted);font-weight:400}
 
 /* ── podnožje ───────────────────────────────────────────────────────── */

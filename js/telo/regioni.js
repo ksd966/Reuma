@@ -90,11 +90,18 @@ export const VRSTE_BOLA = [
  * hrom i nikad podatak. Uz to je razdvojivost od susedne „jake" provereno
  * bolja — ΔE kod deuteranopije 11,3 umesto 5,0 sa akcentom.
  */
+/**
+ * Boje jačine bola — fiksne, iste u oba režima, nikad se ne menjaju sa paletom.
+ *
+ * `naBoji` je boja teksta koji stoji NA toj boji. Nije svuda ista: tamno na
+ * crvenoj daje kontrast 3,7 — ispod praga za sitan tekst — pa tu ide belo
+ * (4,8). Na ostale tri tamno je bolje. Uz boju uvek ide i broj.
+ */
 export const STEPENI = [
-  { do: 3,  boja: '#2E9E8F', ime: 'blaga'     },
-  { do: 6,  boja: '#FAB219', ime: 'umerena'   },
-  { do: 8,  boja: '#EC835A', ime: 'jaka'      },
-  { do: 10, boja: '#D03B3B', ime: 'vrlo jaka' }
+  { do: 3,  boja: '#2E9E8F', ime: 'blaga',     naBoji: '#111722' },
+  { do: 6,  boja: '#FAB219', ime: 'umerena',   naBoji: '#111722' },
+  { do: 8,  boja: '#EC835A', ime: 'jaka',      naBoji: '#111722' },
+  { do: 10, boja: '#D03B3B', ime: 'vrlo jaka', naBoji: '#FFFFFF' }
 ];
 
 export function stepenZa(jacina) {

@@ -47,10 +47,10 @@ export function napraviSkalu(okvir, {
       b.style.color = '';
       if (!izabrano) continue;
       if (bojiPoJacini && bv > 0) {
-        const boja = stepenZa(bv).boja;
-        b.style.background = boja;
-        b.style.borderColor = boja;
-        b.style.color = '#14171A';
+        const stepen = stepenZa(bv);
+        b.style.background = stepen.boja;
+        b.style.borderColor = stepen.boja;
+        b.style.color = stepen.naBoji;
       } else {
         b.style.background = 'var(--text)';
         b.style.borderColor = 'var(--text)';

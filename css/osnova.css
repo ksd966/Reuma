@@ -4,22 +4,28 @@
 :root{
   color-scheme:light dark;
 
-  --ground:#0F1113;
-  --surface:#17191C;
-  --surface-2:#1E2125;
-  --line:rgba(255,255,255,.10);
-  --line-strong:rgba(255,255,255,.18);
+  --ground:#131720;
+  --surface:#1B212C;
+  --surface-2:#242C3A;
+  --line:rgba(214,226,246,.10);
+  --line-strong:rgba(214,226,246,.19);
 
-  --text:#F2F2F0;
-  --muted:#A3A7AC;
-  --dim:#767B82;
-  --accent:#E0A64B;          /* samo hrom, nikad podatak */
+  --text:#EDF1F7;
+  --muted:#A6B0C0;
+  --dim:#8893A3;
 
-  /* Boje podataka — fiksne, iste u oba režima. Uz njih uvek ide i broj. */
-  --j-blaga:#2E9E8F;
-  --j-umerena:#E0A64B;
-  --j-jaka:#EC835A;
-  --j-vrlo-jaka:#D03B3B;
+  /* Akcenat je hrom, nikad podatak. Namerno hladan: boje jačine bola idu od
+     zelene preko žute do crvene, pa žuti akcenat nije mogao da se razlikuje
+     od „umerene". Plavo se ni sa jednom od njih ne meša. */
+  --accent:#93B6F7;
+  --na-accentu:#0E1524;      /* tekst na punom akcentu */
+
+  /* Boje jačine bola su fiksne i stoje u js/telo/regioni.js — jedno mesto,
+     da se ne razidu. Uz njih uvek ide i broj. */
+
+  /* Tekst i znaci koji stoje NA boji jačine ili statusa. Te boje su fiksne i
+     iste u oba režima, pa je i ovo isto — ne menja se sa paletom. */
+  --na-jacini:#111722;
 
   --s-good:#0ca30c;
   --s-warn:#fab219;
@@ -33,7 +39,7 @@
      dizajn-sistema, bez stakla i sjaja. Tamnom režimu senka na skoro crnoj
      podlozi ne pomaže, pa tamo razdvaja ivica — u svetlom je obrnuto. */
   --ivica-kartice:var(--line-strong);
-  --dizanje:0 1px 2px rgba(0,0,0,.34);
+  --dizanje:0 1px 2px rgba(0,0,0,.38);
   --kontrola:var(--surface-2);
 
   --safe-top:env(safe-area-inset-top,0px);
@@ -47,12 +53,13 @@
 
 @media (prefers-color-scheme:light){
   :root{
-    --ground:#F1F1EF;  --surface:#FFFFFF;  --surface-2:#FAFAF8;
-    --line:rgba(17,19,21,.11);  --line-strong:rgba(17,19,21,.2);
-    --text:#131518;  --muted:#585E66;  --dim:#848A92;  --accent:#9A6A16;
+    --ground:#ECEFF5;  --surface:#FFFFFF;  --surface-2:#F6F8FC;
+    --line:rgba(14,21,36,.11);  --line-strong:rgba(14,21,36,.2);
+    --text:#0F1420;  --muted:#525C6E;  --dim:#6A7382;
+    --accent:#2B54A8;  --na-accentu:#F8FAFF;
 
     --ivica-kartice:var(--line);
-    --dizanje:0 1px 1px rgba(17,19,21,.04), 0 10px 20px -12px rgba(17,19,21,.18);
+    --dizanje:0 1px 1px rgba(14,21,36,.04), 0 10px 20px -12px rgba(14,21,36,.2);
   }
 }
 

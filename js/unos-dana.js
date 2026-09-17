@@ -12,7 +12,7 @@ import { REGIONI, GRUPE, PO_ID, stepenZa } from './telo/regioni.js';
 
 /* Ista boja kao na mapi tela za zglob koji je otečen a ne boli. */
 const BOJA_OTEKLINE = '#5A6FD6';
-import { poljaZa } from './polja.js';
+import { poljaZa, ispisi } from './polja.js';
 import { napraviSkalu, recZaJacinu, recZaMeru } from './skala.js';
 import {
   DELOVI, dohvatiUnos, upisiUnos, obrisiUnos, imeDana, punDatum, sadaHHMM, rezim,
@@ -29,6 +29,8 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
   const elSacuvaj = document.getElementById('sacuvaj');
   const elObrisi = document.getElementById('obrisi-unos');
   const elLegendaOblik = document.getElementById('legenda-oblik');
+  const elPomoc = document.getElementById('pomoc');
+  const elPomocPrekidac = document.getElementById('pomoc-prekidac');
   const elBezBola = document.getElementById('unos-bez-bola');
   const elPrepisi = document.getElementById('prepisi');
   const elPrepisiIme = document.getElementById('prepisi-ime');
@@ -48,6 +50,25 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
   let kljuc = null, deo = null, dodatnaVrednost = {};
   let bolRucno = false;          // da li je korisnik sam dirao ukupnu jačinu
   let dodatnaOtvorena = false;   // „Još pitanja" ostaje sklopljeno dok ne zatreba
+
+  /* Legenda i uputstvo su korisni prvih par dana, pa onda samo zauzimaju
+     trećinu ekrana na svakom unosu. Izbor se pamti za sledeći put. */
+  const KLJUC_POMOCI = 'artron.pomoc';
+  let pomocOtvorena = (() => {
+    try { return localStorage.getItem(KLJUC_POMOCI) === 'da'; } catch { return false; }
+  })();
+
+  function osveziPomoc() {
+    elPomoc.hidden = !pomocOtvorena;
+    elPomocPrekidac.setAttribute('aria-expanded', String(pomocOtvorena));
+  }
+
+  elPomocPrekidac.addEventListener('click', () => {
+    pomocOtvorena = !pomocOtvorena;
+    osveziPomoc();
+    try { localStorage.setItem(KLJUC_POMOCI, pomocOtvorena ? 'da' : 'ne'); } catch { /* privatni režim */ }
+  });
+  osveziPomoc();
 
   /* ── spisak regiona ─────────────────────────────────────────────────── */
   const dugmadRegiona = new Map();
@@ -189,6 +210,7 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
     znak.hidden = false;
     znak.textContent = jacina > 0 ? String(jacina) : '';
     znak.style.background = jacina > 0 ? stepenZa(jacina).boja : BOJA_OTEKLINE;
+    znak.style.color = jacina > 0 ? stepenZa(jacina).naBoji : 'var(--na-jacini)';
     if (unos.oteklo) znak.dataset.oteklo = 'da'; else delete znak.dataset.oteklo;
 
     const delovi = [PO_ID.get(id).ime];
@@ -236,6 +258,12 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
     const polja = poljaZa(deo, rezim());
     if (!polja.length) return;
 
+    /* Sažetak već odgovorenog stoji na samoj liniji, pa se vidi da ništa nije
+       izgubljeno — bez razvijanja pet pitanja i dve table brojeva. */
+    const odgovoreno = polja
+      .map(polje => ispisi(polje.id, dodatnaVrednost[polje.id]))
+      .filter(Boolean);
+
     const prekidac = document.createElement('button');
     prekidac.type = 'button';
     prekidac.className = 'sklopivo';
@@ -244,7 +272,8 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
     prekidac.setAttribute('aria-controls', 'dodatna-polja');
     prekidac.innerHTML = `
       <span class="sklopivo__ime">Još pitanja (${polja.length})</span>
-      <span class="sklopivo__pod">${DELOVI.find(d => d.id === deo).opis}</span>
+      <span class="sklopivo__pod">${
+        odgovoreno.length ? odgovoreno.join(' · ') : DELOVI.find(d => d.id === deo).opis}</span>
       <svg class="sklopivo__strelica" viewBox="0 0 24 24" aria-hidden="true" width="20" height="20"
            fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M5 9 L12 16 L19 9"/>
@@ -272,6 +301,18 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
     elDodatna.append(prekidac, okvir);
   }
 
+  /** Sažetak na liniji „Još pitanja" prati odgovore i dok su polja otvorena. */
+  function osveziSazetak() {
+    const pod = elDodatna.querySelector('#dodatna-prekidac .sklopivo__pod');
+    if (!pod) return;
+    const odgovoreno = poljaZa(deo, rezim())
+      .map(polje => ispisi(polje.id, dodatnaVrednost[polje.id]))
+      .filter(Boolean);
+    pod.textContent = odgovoreno.length
+      ? odgovoreno.join(' · ')
+      : DELOVI.find(d => d.id === deo).opis;
+  }
+
   /** Da/ne, sa trećim mogućim stanjem — neodgovoreno. */
   function poljePrekidac(polje) {
     const okvir = zaglavljePolja(polje);
@@ -288,6 +329,7 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
       b.setAttribute('aria-pressed', String(dodatnaVrednost[polje.id] === o.v));
       b.addEventListener('click', () => {
         dodatnaVrednost[polje.id] = dodatnaVrednost[polje.id] === o.v ? undefined : o.v;
+        osveziSazetak();
         for (const d of red.children) {
           d.setAttribute('aria-pressed', String((d.dataset.vrednost === 'true') === dodatnaVrednost[polje.id]));
         }
@@ -316,6 +358,7 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
         const spisak = dodatnaVrednost[polje.id];
         const i = spisak.indexOf(o.v);
         if (i >= 0) spisak.splice(i, 1); else spisak.push(o.v);
+        osveziSazetak();
         b.setAttribute('aria-pressed', String(i < 0));
       });
       red.appendChild(b);
@@ -358,6 +401,7 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
         /* Ponovni dodir na već izabrano poništava izbor — da se greška ispravi
            bez brisanja celog unosa. */
         dodatnaVrednost[polje.id] = dodatnaVrednost[polje.id] === o.v ? undefined : o.v;
+        osveziSazetak();
         for (const d of red.children) {
           d.setAttribute('aria-pressed', String(Number(d.dataset.vrednost) === dodatnaVrednost[polje.id]));
         }
@@ -391,7 +435,7 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
       oznaka: `${polje.ime} od ${polje.min} do ${polje.max}`,
       bojiPoJacini: false,
       praznoDozvoljeno: true,
-      naIzbor: (v) => { dodatnaVrednost[polje.id] = v ?? undefined; osvezi(); }
+      naIzbor: (v) => { dodatnaVrednost[polje.id] = v ?? undefined; osvezi(); osveziSazetak(); }
     });
 
     function osvezi() {
@@ -429,9 +473,9 @@ export function napraviEkranUnosa({ naZavrsetak, naJavljanje }) {
         `Prepiši unos — ${odakle}${n ? `, ${n} ${n === 1 ? 'region' : 'regiona'}` : ''}`);
     }
 
-    /* Ako unos već nosi odgovore na dodatna pitanja, ona se ne kriju — inače
-       bi izgledalo da su izgubljeni. */
-    dodatnaOtvorena = poljaZa(deo, rezim()).some(polje => unos?.[polje.id] != null);
+    /* Ne otvara se samo ni kad odgovori postoje — oni stoje ispisani na
+       liniji prekidača, pa se vidi da su tu, a ekran ostaje kratak. */
+    dodatnaOtvorena = false;
 
     mapa.ocistiSve();
     for (const r of REGIONI) osveziRegion(r.id);
