@@ -64,16 +64,33 @@ export function napraviEkranDana({ naIzborDela, naPromenuDana, naJavljanje, naLe
    * Bez nje ekran kaže samo šta je zabeleženo, pa se ne vidi šta preostaje.
    */
   function osveziOstalo() {
-    if (!jeDanas(kljuc)) { elOstalo.hidden = true; return; }
+    /* Prvog dana uvodna rečenica kaže isto to i još objasni šta se otvara,
+       pa se ovde ne ponavlja. */
+    if (!jeDanas(kljuc) || !imaIkakvihUnosa()) { elOstalo.hidden = true; return; }
 
     const unosi = praznoAStiglo(kljuc).map(id => DELOVI.find(d => d.id === id).ime.toLowerCase());
-    const lekovi = naReduNa(kljuc).filter(r => !r.uzeto).map(r => r.lek.naziv);
-    const jedinstveni = [...new Set(lekovi)];
-    const delovi = [...unosi, ...jedinstveni];
+    const lekovi = [...new Set(naReduNa(kljuc).filter(r => !r.uzeto).map(r => r.lek.naziv))];
+    const preostalo = [...unosi, ...lekovi];
 
-    elOstalo.hidden = !delovi.length;
-    if (!delovi.length) return;
-    elOstalo.textContent = `Ostalo danas: ${delovi.join(' · ')}`;
+    elOstalo.hidden = false;
+    if (preostalo.length) {
+      elOstalo.dataset.stanje = 'preostalo';
+      elOstalo.innerHTML = '';
+      elOstalo.append('Ostalo danas: ');
+      const b = document.createElement('b');
+      b.textContent = preostalo.join(' · ');
+      elOstalo.appendChild(b);
+      return;
+    }
+
+    /* Kad nema više ničega, ne sklanja se nego se to i kaže — inače se ne zna
+       da li je sve urađeno ili se linija jednostavno nije pojavila.
+       Gleda se današnji dan: u sedam ujutru još ništa nije ni stiglo, pa
+       „sve je zabeleženo" ne bi bilo tačno. */
+    elOstalo.dataset.stanje = 'gotovo';
+    elOstalo.textContent = DELOVI.some(d => dohvatiDan(kljuc)[d.id])
+      ? 'Sve je zabeleženo za danas.'
+      : 'Dodirni jutro, podne ili veče da uneseš kako je bilo.';
   }
 
   /* ── lekovi za ovaj dan ───────────────────────────────────────────── */
@@ -114,6 +131,7 @@ export function napraviEkranDana({ naIzborDela, naPromenuDana, naJavljanje, naLe
         if (beleziPrimenu(l)) { naLekove?.(l.id); return; }
         postaviBrojUzimanja(l.id, kljuc, uzeto ? redniBroj : redniBroj + 1);
         osveziLekove();
+        osveziOstalo();          // lek koji je upravo potvrđen nije više „ostalo"
         naJavljanje?.(uzeto ? `Poništeno — ${l.naziv}` : `Uzeto — ${l.naziv}`);
       });
       return d;
@@ -162,6 +180,14 @@ export function napraviEkranDana({ naIzborDela, naPromenuDana, naJavljanje, naLe
     b.className = 'deo';
     b.dataset.deo = deo.id;
     b.dataset.stanje = unos ? 'uneto' : 'prazno';
+
+    if (unos) {
+      const traka = document.createElement('span');
+      traka.className = 'deo__traka';
+      traka.setAttribute('aria-hidden', 'true');
+      if (unos.bol > 0) traka.style.background = stepenZa(unos.bol).boja;
+      b.appendChild(traka);
+    }
 
     const ime = document.createElement('p');
     ime.className = 'deo__ime';

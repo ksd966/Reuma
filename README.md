@@ -151,11 +151,24 @@ HTML-u, drugi u JavaScriptu. Odeljci koji to traže pamte stanje u
 `localStorage`; to je udobnost ovog telefona, ne podatak, pa ne ide u dnevnik
 koji se izvozi i u kopiju.
 
-**Ekran Dan** kaže i šta preostaje, ne samo šta je zabeleženo: linija „Ostalo
-danas" nabraja unose koji su stigli a nisu popunjeni i lekove koji su na redu a
-nisu potvrđeni. Kartice pišu gde je bolelo („Leva šaka") umesto „1 region".
-Dugme „Ništa me ne boli" se sklanja kad nema šta da upiše, umesto da stoji
-ugašeno.
+**Ekran Dan** je preslagan oko jednog težišta. Ranije su vrh činila tri
+odvojena reda — traka sa danom, naslov odeljka, pa linija sa preostalim — pa
+ekran nije imao odakle da počne. Sada je to jedan blok: ime dana krupno, datum,
+i ispod crte šta je od tog dana ostalo. Kad ništa ne preostaje, linija to i
+kaže („Sve je zabeleženo za danas") umesto da se sakrije — inače se ne zna da
+li je sve urađeno ili se linija prosto nije pojavila. Prvog dana se ne
+prikazuje uopšte, jer uvodna rečenica kaže isto i još objasni šta se otvara.
+
+Kartice delova dana nose traku u boji jačine na vrhu — ista boja koju nosi i
+broj ispod, pa se dan čita pre nego što se pročitaju brojevi. Popunjena
+kartica stoji kao kartica, prazna kao mesto koje je tek čeka: bez podloge i bez
+senke. Ranije je bilo obrnuto — popunjena je bila siva a prazna bela, pa je
+prazna više padala u oči. Kartice pišu i gde je bolelo („Leva šaka") umesto
+„1 region". Dugme „Ništa me ne boli" se sklanja kad nema šta da upiše.
+
+Datum se više ne ponavlja u gornjoj traci, potvrđena doza nema zelenu ivicu oko
+celog reda (kvačica je dovoljna), a od četiri velika naslova odeljka na ovom
+ekranu ostao je jedan.
 
 ### Raspored leka, a ne „vrsta"
 

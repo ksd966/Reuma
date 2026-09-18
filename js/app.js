@@ -110,8 +110,9 @@ function prikazi(ime) {
     elNaslov.textContent = z.naslov;
     elPodnaslov.textContent = z.podnaslov;
   } else {
+    /* Ekran dana sam nosi ime dana krupno, pa se u traci ne ponavlja. */
     elNaslov.textContent = 'Artron';
-    elPodnaslov.textContent = imeDana(tekuciDan);
+    elPodnaslov.textContent = '';
   }
   scrollTo(0, 0);
 }

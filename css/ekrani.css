@@ -14,24 +14,49 @@
 
 .uputstvo-levo{color:var(--muted);font-size:13.5px;line-height:1.55;margin:0 0 12px}
 
-/* ── traka sa danom ─────────────────────────────────────────────────── */
-.dan-traka{
-  display:grid;grid-template-columns:var(--meta) 1fr var(--meta);
-  align-items:center;gap:10px;margin-top:18px;margin-bottom:4px;
-}
-.dan-traka__strelica{
+/* Okruglo dugme sa strelicom — koriste ga i dan i mesec u dnevniku. */
+.strelica{
   width:var(--meta);height:var(--meta);
   display:flex;align-items:center;justify-content:center;
   border:1px solid var(--line-strong);border-radius:var(--radius-sm);
   background:var(--kontrola);color:var(--muted);
 }
-.dan-traka__strelica:disabled{opacity:.32;cursor:default}
-.dan-traka__sredina{text-align:center;min-width:0}
-.dan-traka__ime{
-  font-size:21px;font-weight:600;letter-spacing:-.01em;line-height:1.2;
+.strelica:disabled{opacity:.32;cursor:default}
+
+/* ── vrh ekrana dana ────────────────────────────────────────────────── */
+
+/* Dan i ono što je od njega ostalo stoje u jednom bloku. Ranije su bili tri
+   odvojena reda — traka, pa naslov odeljka, pa linija sa preostalim — pa vrh
+   ekrana nije imao nijedno težište. */
+.dan-vrh{
+  margin-top:16px;margin-bottom:14px;padding:14px 14px 15px;
+  border:1px solid var(--ivica-kartice);border-radius:var(--radius);
+  background:var(--surface);box-shadow:var(--dizanje);
+}
+.dan-vrh__traka{
+  display:grid;grid-template-columns:var(--meta) 1fr var(--meta);
+  align-items:center;gap:10px;
+}
+.dan-vrh__strelica{
+  width:var(--meta);height:var(--meta);
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--line);border-radius:var(--radius-sm);
+  background:transparent;color:var(--muted);
+}
+.dan-vrh__strelica:disabled{opacity:.3;cursor:default}
+.dan-vrh__sredina{text-align:center;min-width:0}
+.dan-vrh__ime{
+  font-size:24px;font-weight:600;letter-spacing:-.02em;line-height:1.15;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-.dan-traka__datum{color:var(--muted);font-size:13.5px;margin-top:1px}
+.dan-vrh__datum{color:var(--muted);font-size:13.5px;margin-top:2px}
+
+.dan-vrh__ostalo{
+  margin-top:13px;padding-top:12px;border-top:1px solid var(--line);
+  font-size:14px;line-height:1.5;color:var(--text);
+}
+.dan-vrh__ostalo[data-stanje="gotovo"]{color:var(--muted)}
+.dan-vrh__ostalo b{font-weight:600}
 
 .dugme--danas{margin-top:14px;width:100%}
 
@@ -39,14 +64,27 @@
 .delovi{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:4px}
 
 .deo{
+  position:relative;overflow:hidden;
   display:flex;flex-direction:column;align-items:stretch;gap:7px;
-  min-height:164px;padding:14px 12px 15px;
+  min-height:164px;padding:16px 12px 15px;
   border:1px solid var(--ivica-kartice);border-radius:var(--radius);
   background:var(--surface);box-shadow:var(--dizanje);text-align:left;
 }
-/* Popunjen deo se jasno razlikuje od praznog: puna ivica i podignuta podloga. */
-.deo[data-stanje="uneto"]{border-color:var(--line-strong);background:var(--surface-2)}
-.deo[data-stanje="prazno"]{border-style:dashed}
+/* Traka na vrhu kartice nosi boju jačine — ista boja koju nosi i broj ispod,
+   pa se dan čita i pre nego što se pročitaju brojevi. Boja nikad ne stoji
+   sama: broj je odmah uz nju. */
+.deo__traka{
+  position:absolute;top:0;left:0;right:0;height:4px;
+  background:var(--line-strong);
+}
+.deo[data-stanje="prazno"] .deo__traka{display:none}
+/* Popunjen deo stoji kao kartica, prazan kao mesto koje je tek čeka: bez
+   podloge i bez senke. Ranije je bilo obrnuto — popunjen je bio siv a prazan
+   beo, pa je prazan više padao u oči. */
+.deo[data-stanje="uneto"]{border-color:var(--line-strong)}
+.deo[data-stanje="prazno"]{
+  border-style:dashed;background:transparent;box-shadow:none;
+}
 
 .deo__ime{
   font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);
@@ -361,7 +399,10 @@ input[type="time"].unos,input[type="date"].unos{
   border:1px solid var(--ivica-kartice);border-radius:var(--radius);
   background:var(--surface);box-shadow:var(--dizanje);margin-bottom:8px;
 }
-.doza[data-uzeto="da"]{border-color:var(--s-good);background:var(--surface-2)}
+/* Potvrđenu dozu nosi kvadratić — zelena ivica oko celog reda je vikala na
+   svakom uzetom leku. Značenje i dalje drže oblik (kvačica) i boja u njemu. */
+.doza[data-uzeto="da"]{border-color:var(--line-strong);background:var(--surface-2)}
+.doza[data-uzeto="da"] .doza__ime{color:var(--muted)}
 .doza__kvadrat{
   width:26px;height:26px;flex:none;border-radius:8px;
   border:2px solid var(--line-strong);
@@ -573,13 +614,6 @@ body[data-dno="da"] .strana{padding-bottom:calc(78px + var(--safe-bottom))}
 }
 .cesti__dugme[data-oznacen="da"]{font-weight:600;background:var(--surface-2)}
 
-/* ── šta je danas ostalo ────────────────────────────────────────────── */
-.ostalo{
-  margin:14px 0 2px;padding:12px 15px;
-  border:1px solid var(--line-strong);border-left:3px solid var(--accent);
-  border-radius:var(--radius-sm);background:var(--surface);
-  font-size:14.5px;font-weight:600;line-height:1.45;
-}
 
 /* Detalji toka dana idu red po red — nanizani su bili zid skraćenica. */
 .tok__detalji{margin-top:12px;padding-top:11px;border-top:1px solid var(--line)}

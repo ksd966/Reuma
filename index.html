@@ -57,28 +57,29 @@
 <section class="ekran strana" id="ekran-dan" aria-labelledby="n-dan">
   <h1 class="samo-citac" id="n-dan">Pregled dana</h1>
 
-  <nav class="dan-traka" aria-label="Izbor dana">
-    <button class="dan-traka__strelica" id="dan-nazad" type="button" aria-label="Prethodni dan">
-      <svg viewBox="0 0 24 24" aria-hidden="true" width="19" height="19">
-        <path d="M15 4 L7 12 L15 20" fill="none" stroke="currentColor" stroke-width="2.2"
-              stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </button>
-    <div class="dan-traka__sredina">
-      <p class="dan-traka__ime" id="dan-ime">danas</p>
-      <p class="dan-traka__datum tabular" id="dan-datum"></p>
-    </div>
-    <button class="dan-traka__strelica" id="dan-napred" type="button" aria-label="Sledeći dan">
-      <svg viewBox="0 0 24 24" aria-hidden="true" width="19" height="19">
-        <path d="M9 4 L17 12 L9 20" fill="none" stroke="currentColor" stroke-width="2.2"
-              stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </button>
-  </nav>
+  <header class="dan-vrh">
+    <nav class="dan-vrh__traka" aria-label="Izbor dana">
+      <button class="dan-vrh__strelica" id="dan-nazad" type="button" aria-label="Prethodni dan">
+        <svg viewBox="0 0 24 24" aria-hidden="true" width="19" height="19">
+          <path d="M15 4 L7 12 L15 20" fill="none" stroke="currentColor" stroke-width="2.2"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <div class="dan-vrh__sredina">
+        <p class="dan-vrh__ime" id="dan-ime">danas</p>
+        <p class="dan-vrh__datum tabular" id="dan-datum"></p>
+      </div>
+      <button class="dan-vrh__strelica" id="dan-napred" type="button" aria-label="Sledeći dan">
+        <svg viewBox="0 0 24 24" aria-hidden="true" width="19" height="19">
+          <path d="M9 4 L17 12 L9 20" fill="none" stroke="currentColor" stroke-width="2.2"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </nav>
+    <p class="dan-vrh__ostalo" id="ostalo" hidden role="status"></p>
+  </header>
 
-  <p class="ostalo" id="ostalo" hidden role="status"></p>
-
-  <h2 class="naslov-odeljka">Tri unosa za ovaj dan</h2>
+  <h2 class="samo-citac">Tri unosa za ovaj dan</h2>
   <p class="uvod" id="uvod" hidden>
     Dodirni <b>jutro</b>, <b>podne</b> ili <b>veče</b> — otvara se mapa tela na
     kojoj označavaš gde te boli i koliko.
@@ -86,7 +87,7 @@
   <div class="delovi" id="delovi"></div>
 
   <section class="danas-lekovi" id="danas-lekovi" hidden aria-labelledby="n-danas-lekovi">
-    <h2 class="naslov-odeljka" id="n-danas-lekovi">Lekovi za ovaj dan</h2>
+    <h2 class="naslov-odeljka" id="n-danas-lekovi">Lekovi</h2>
     <div id="danas-lekovi-spisak"></div>
   </section>
 

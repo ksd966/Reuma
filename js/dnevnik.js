@@ -136,7 +136,7 @@ export function napraviEkranDnevnika({ naIzborDana }) {
     const strelica = (smer, oznaka, putanja) => {
       const b = document.createElement('button');
       b.type = 'button';
-      b.className = 'dan-traka__strelica';
+      b.className = 'strelica';
       b.setAttribute('aria-label', oznaka);
       b.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true" width="19" height="19"
         fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
