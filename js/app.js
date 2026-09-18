@@ -27,6 +27,21 @@ await pripremi();
    raspored + način pre nego što ijedan ekran pokuša da ih pročita. */
 migrirajLekove();
 
+/**
+ * Skloni ekran učitavanja.
+ *
+ * Poziva se tek kad je prvi ekran iscrtan, ne ovde — inače bi se video trenutak
+ * praznog okvira između nestanka znaka i pojave sadržaja.
+ */
+function skloniUcitavanje() {
+  const el = document.getElementById('ucitavanje');
+  if (!el) return;
+  el.dataset.gotovo = 'da';
+  el.addEventListener('transitionend', () => el.remove(), { once: true });
+  /* Ako prelaz ne okine (sakrivena kartica, ugašene animacije), skloni ga svejedno. */
+  setTimeout(() => el.remove(), 600);
+}
+
 const ekrani = {
   dan: document.getElementById('ekran-dan'),
   unos: document.getElementById('ekran-unos'),
@@ -235,6 +250,9 @@ document.addEventListener('visibilitychange', () => {
 ekranDana.iscrtaj(tekuciDan);
 prikazi('dan');
 osveziPodsetnik();
+
+/* Tek sada, kad je prvi ekran zaista iscrtan. */
+requestAnimationFrame(skloniUcitavanje);
 
 /* Pred zatvaranje ili prelazak u pozadinu upiši odmah, bez odlaganja —
    na telefonu aplikacija ume da bude ugašena bez najave. */

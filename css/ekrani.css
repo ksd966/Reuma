@@ -115,10 +115,10 @@
 .tok{
   margin-top:12px;padding:14px 14px 12px;
   border:1px solid var(--ivica-kartice);border-radius:var(--radius);
-  background:var(--surface);box-shadow:var(--dizanje);
+  background:var(--surface);
 }
 .tok__naslov{
-  font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);
+  font-size:13px;font-weight:600;letter-spacing:-.005em;color:var(--muted);
   margin-bottom:10px;
 }
 .tok__crtez{display:block;width:100%;height:78px}
@@ -173,10 +173,10 @@
 .zbir{
   margin-top:12px;padding:14px 15px 13px;
   border:1px solid var(--ivica-kartice);border-radius:var(--radius);
-  background:var(--surface);box-shadow:var(--dizanje);
+  background:var(--surface);
 }
 .zbir__naslov{
-  font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);
+  font-size:13px;font-weight:600;letter-spacing:-.005em;color:var(--muted);
   margin-bottom:11px;
 }
 .zbir__stavke{display:grid;grid-template-columns:1fr 1fr;gap:11px 14px}
@@ -256,10 +256,10 @@
 .izv-blok{
   margin-top:12px;padding:17px;
   border:1px solid var(--ivica-kartice);border-radius:var(--radius);
-  background:var(--surface);box-shadow:var(--dizanje);
+  background:var(--surface);
 }
 .izv-naslov{
-  font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);
+  font-size:13px;font-weight:600;letter-spacing:-.005em;color:var(--muted);
   margin-bottom:11px;
 }
 .izv-prazno{color:var(--muted);font-size:13.5px;line-height:1.5}
@@ -278,7 +278,7 @@
   padding:15px 16px;min-height:92px;
   display:flex;flex-direction:column;justify-content:center;gap:3px;
   border:1px solid var(--ivica-kartice);border-radius:var(--radius);
-  background:var(--surface);box-shadow:var(--dizanje);
+  background:var(--surface);
 }
 .plocica__ime{
   color:var(--dim);font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;
@@ -322,7 +322,7 @@
 /* ── stanje čuvanja ─────────────────────────────────────────────────── */
 .cuvanje{
   border:1px solid var(--ivica-kartice);border-radius:var(--radius);
-  background:var(--surface);box-shadow:var(--dizanje);padding:4px 15px;
+  background:var(--surface);padding:4px 15px;
 }
 .cuvanje__red{
   display:flex;align-items:flex-start;gap:11px;
@@ -519,7 +519,7 @@ body[data-dno="da"] .strana{padding-bottom:calc(78px + var(--safe-bottom))}
   color:var(--muted);font-size:14px;line-height:1.6;
   margin:0 0 14px;padding:14px 16px;
   border:1px solid var(--ivica-kartice);border-left:3px solid var(--accent);
-  border-radius:var(--radius-sm);background:var(--surface);box-shadow:var(--dizanje);
+  border-radius:var(--radius-sm);background:var(--surface);
 }
 .uvod b{color:var(--text);font-weight:600}
 
@@ -602,8 +602,8 @@ body[data-dno="da"] .strana{padding-bottom:calc(78px + var(--safe-bottom))}
 /* ── najčešći regioni ───────────────────────────────────────────────── */
 .cesti{margin-bottom:4px}
 .cesti__naslov{
-  font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;
-  color:var(--dim);margin-bottom:8px;
+  font-size:13px;font-weight:600;letter-spacing:-.005em;
+  color:var(--muted);margin-bottom:8px;
 }
 .cesti__red{display:flex;flex-wrap:wrap;gap:8px}
 .cesti__dugme{

@@ -170,6 +170,41 @@ Datum se više ne ponavlja u gornjoj traci, potvrđena doza nema zelenu ivicu ok
 celog reda (kvačica je dovoljna), a od četiri velika naslova odeljka na ovom
 ekranu ostao je jedan.
 
+### Ekran učitavanja
+
+Model tela nosi 525 KB i učitava se pre prvog iscrtavanja. Na sporoj vezi je to
+merljivo: **prvo pokretanje je stajalo sedamnaest sekundi na belom ekranu.**
+Posle toga service worker sve kešira, pa ide za dvestotinak milisekundi — ali
+prvo pokretanje i ono posle svake nove verzije su stvarna.
+
+Ekran učitavanja stoji u `index.html`, unutar `<style>` u glavi, a ne u `css/` —
+mora da oboji ekran pre nego što ijedna spoljna datoteka stigne. Iz istog
+razloga su mu boje ispisane, ne preko tokena: `css/osnova.css` u tom trenutku
+još nije stigao.
+
+Znak je isti kao na splash slici i iste veličine na istom mestu, pa se prelaz
+sa iOS splash-a na aplikaciju ne vidi. Splash se sada pravi u obe varijante —
+bez svetle se u svetlom režimu video skok sa tamnog splash-a na svetlu
+aplikaciju.
+
+Pomera se samo zglobni prostor iz znaka, disanjem. Bez vrtećeg točkića: ovo je
+dnevnik bolova, ne preuzimanje datoteke. Rečenica „Artron se učitava…" kreće sa
+zakašnjenjem od 2,5 s, pa se na brzoj vezi nikad ne vidi. Uz `prefers-reduced-
+motion` ništa se ne pomera, a rečenica stoji od početka.
+
+Sklanja se tek kad je prvi ekran zaista iscrtan, ne čim podaci stignu — inače
+bi se video trenutak praznog okvira između nestanka znaka i pojave sadržaja.
+
+### Zašto sve ne lebdi jednako
+
+Podizanje nose samo stvari koje se dodiruju: vrh ekrana dana, kartice delova
+dana, redovi lekova, redovi dnevnika. Pano koji se samo čita — tok dana, lični
+zbir, pločice izveštaja, stanje čuvanja — ima ivicu, ali ne i senku. Kad sve
+lebdi jednako, ništa se ne ističe i ekran izgleda kao niz identičnih pravougaonika.
+
+Iz istog razloga velika slova nose samo naslovi odeljaka, kojih je sada jedan po
+ekranu. Naslovi kartica su obična slova: „Tok dana", ne „TOK DANA".
+
 ### Raspored leka, a ne „vrsta"
 
 Ranije su lekovi bili podeljeni na stalne, po potrebi i biološke — i ta podela

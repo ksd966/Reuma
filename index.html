@@ -14,6 +14,18 @@
 <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
 <link rel="icon" href="assets/icons/icon-192.png">
 
+<!-- Splash slike. Svetla varijanta ide prva: uređaj koji ne razume
+     prefers-color-scheme u ovom kontekstu je jednostavno preskoči i uzme
+     tamnu ispod, pa nema ekrana bez slike. -->
+<link rel="apple-touch-startup-image"
+      media="(prefers-color-scheme:light) and (device-width:390px) and (device-height:844px) and (-webkit-device-pixel-ratio:3) and (orientation:portrait)"
+      href="assets/splash/splash-1170x2532-svetlo.png">
+<link rel="apple-touch-startup-image"
+      media="(prefers-color-scheme:light) and (device-width:375px) and (device-height:812px) and (-webkit-device-pixel-ratio:3) and (orientation:portrait)"
+      href="assets/splash/splash-1125x2436-svetlo.png">
+<link rel="apple-touch-startup-image"
+      media="(prefers-color-scheme:light) and (device-width:428px) and (device-height:926px) and (-webkit-device-pixel-ratio:3) and (orientation:portrait)"
+      href="assets/splash/splash-1284x2778-svetlo.png">
 <link rel="apple-touch-startup-image"
       media="(device-width:390px) and (device-height:844px) and (-webkit-device-pixel-ratio:3) and (orientation:portrait)"
       href="assets/splash/splash-1170x2532.png">
@@ -24,11 +36,74 @@
       media="(device-width:428px) and (device-height:926px) and (-webkit-device-pixel-ratio:3) and (orientation:portrait)"
       href="assets/splash/splash-1284x2778.png">
 
+<style>
+  /* Učitavanje stoji ovde, a ne u css/, jer mora da oboji ekran pre nego što
+     ijedna spoljna datoteka stigne. Na sporoj vezi se prvo učitavanje meri u
+     sekundama — model tela nosi 525 KB — pa bi inače toliko stajao beo ekran.
+
+     Boje su ispisane, ne preko tokena: tokeni dolaze iz css/osnova.css, koji u
+     tom trenutku još nije stigao. */
+  :root{color-scheme:light dark}
+  #ucitavanje{
+    position:fixed;inset:0;z-index:100;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;
+    background:#131720;
+    transition:opacity .32s ease;
+  }
+  @media (prefers-color-scheme:light){ #ucitavanje{background:#ECEFF5} }
+  #ucitavanje[hidden]{display:none}
+  #ucitavanje[data-gotovo="da"]{opacity:0;pointer-events:none}
+
+  .ucitavanje__znak{width:150px;height:150px;display:block}
+  .ucitavanje__zglob{fill:#EDF1F7}
+  @media (prefers-color-scheme:light){ .ucitavanje__zglob{fill:#0F1420} }
+
+  /* Pomera se samo zglobni prostor — isti onaj iz znaka. Bez vrtećeg
+     točkića: ovo je dnevnik bolova, ne preuzimanje datoteke. */
+  .ucitavanje__prostor{
+    fill:#E0A64B;
+    transform-box:fill-box;transform-origin:center;
+    animation:disanje 1.8s ease-in-out infinite;
+  }
+  @keyframes disanje{
+    0%,100%{transform:scaleX(1)}
+    50%{transform:scaleX(.54)}
+  }
+
+  /* Rečenica se pojavljuje tek ako učitavanje stvarno traje — na brzoj vezi
+     se nikad ne vidi. */
+  .ucitavanje__rec{
+    margin:0;font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+    font-size:14px;color:#8893A3;opacity:0;
+    animation:kasnaPojava .4s ease 2.5s forwards;
+  }
+  @media (prefers-color-scheme:light){ .ucitavanje__rec{color:#6A7382} }
+  @keyframes kasnaPojava{ to{opacity:1} }
+
+  @media (prefers-reduced-motion:reduce){
+    .ucitavanje__prostor{animation:none}
+    .ucitavanje__rec{animation:none;opacity:1}
+  }
+</style>
+
 <link rel="stylesheet" href="css/osnova.css">
 <link rel="stylesheet" href="css/komponente.css">
 <link rel="stylesheet" href="css/ekrani.css">
 </head>
 <body>
+
+<div id="ucitavanje" role="status" aria-live="polite">
+  <svg class="ucitavanje__znak" viewBox="0 0 512 512" aria-hidden="true">
+    <g class="ucitavanje__zglob">
+      <circle cx="197" cy="150" r="57"/><circle cx="315" cy="150" r="57"/>
+      <rect x="214" y="146" width="84" height="86"/>
+      <circle cx="197" cy="362" r="57"/><circle cx="315" cy="362" r="57"/>
+      <rect x="214" y="280" width="84" height="86"/>
+    </g>
+    <rect class="ucitavanje__prostor" x="188" y="238" width="136" height="36" rx="18"/>
+  </svg>
+  <p class="ucitavanje__rec">Artron se učitava…</p>
+</div>
 
 <header class="topbar">
   <button class="topbar__nazad" id="nazad" type="button" hidden aria-label="Nazad na pregled dana">

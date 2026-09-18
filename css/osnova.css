@@ -37,7 +37,10 @@
 
   /* Razdvajanje površina. Podloga → kartica → kontrola u kartici; tri tona iz
      dizajn-sistema, bez stakla i sjaja. Tamnom režimu senka na skoro crnoj
-     podlozi ne pomaže, pa tamo razdvaja ivica — u svetlom je obrnuto. */
+     podlozi ne pomaže, pa tamo razdvaja ivica — u svetlom je obrnuto.
+
+     Podizanje nose samo stvari koje se dodiruju. Pano koji se samo čita ima
+     ivicu, ali ne i senku: kad sve lebdi jednako, ništa se ne ističe. */
   --ivica-kartice:var(--line-strong);
   --dizanje:0 1px 2px rgba(0,0,0,.38);
   --kontrola:var(--surface-2);
